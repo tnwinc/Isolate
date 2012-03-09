@@ -121,6 +121,8 @@ Isolate.configure require, (ctx)->
 
 #### Mapping Options
 
+##### passthru
+
 ```coffeescript
 Isolate.configure require, (ctx)->
   ctx.passthru 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' #...
@@ -136,8 +138,10 @@ times. A _matcher_ can be one of:
 * A RegExp designed to match against the full module path
 * A string staring and ending with a '/', which will be turned into a
   RegExp instance by removing the '/' from the start and end and calling
-  new RegExp on the resulting string
+  `new RegExp()` on the resulting string
 * Any other string which must match the full module path exactly
+
+##### map
 
 ```coffeescript
 Isolate.configure require, (ctx)->
@@ -154,7 +158,7 @@ Isolate.configure require, (ctx)->
     '/.*_controller$/' : (options)-> #...
     '/.*_view/'        : (options)-> #...
 ```
-`map` allows you to provide a specific standin implmentation to inject
+`map` allows you to provide a specific standin implementation to inject
 for any given _matcher_ (See the _passthru_ section above for details
 on matchers).
 
@@ -165,6 +169,8 @@ pairs too (second example above)
 
 _Note:_ Conflicts between `passthru`, `map`, and overlapping matchers of
 each are resolved by choosing the last-defined matching rule.
+
+##### mapType
 
 ```coffeescript
 Isolate.configure require, (ctx)->
@@ -188,7 +194,7 @@ As syntactic sugar, you can also pass an object map of type: standin
 paris too (second example above).
 
 The _type_ argument is compared (case insensitive) to the output of running
-`Object.prototype.toString` on the actual module implmentation. Just the
+`Object.prototype.toString` on the actual module implemenntation. Just the
 substring containing the type is compared, so for a dependency which is
 a function, `Object.prototype.toString` would return `[object Function]`
 which means you should specify 'function' as the type to map.
@@ -197,13 +203,12 @@ which means you should specify 'function' as the type to map.
 
 ```coffeescript
 Isolate.configure require, (ctx)->
-  map /.*_controller/, map.asFactory (actual_module, module_path,
-requesting_module_path)->
+  map /.*_controller/, map.asFactory (actual_module, module_path, requesting_module_path)->
     toString: -> "[Fake for #{module_path}]"
-  mapType 'function', map.asFactory (actual_module, module_path,
-requesting_module_path)->
+  mapType 'function', map.asFactory (actual_module, module_path, requesting_module_path)->
     fake_function = ->
     fake_function.toString = -> "[Fake Function for #{module_path}]"
+    return fake_function
 ```
 `map.asFactory` can be used to provide a factory function to `map` and
 `mapType`. The factory function will be evaluated when resolving the
@@ -220,5 +225,3 @@ modules hasn't been broken.
 **requirejs / AMD**
 
 **node / CommonJS**
-
-#### Accessing Fakes from Tests
