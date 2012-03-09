@@ -120,8 +120,12 @@ Isolate.configure require, (ctx)->
 ```
 
 #### Mapping Options
-**passthru**
-Allows you to specify that certain modules should be allowed through
+
+```coffeescript
+Isolate.configure require, (ctx)->
+  ctx.passthru 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' #...
+```
+`passthru` allows you to specify that certain modules should be allowed through
 without injecting a standin. This is good for external libraries that
 are assumed to be working and stable, or are too complex to
 realistically build suitable standins for.
@@ -137,11 +141,55 @@ times. A _matcher_ can be one of:
 
 ```coffeescript
 Isolate.configure require, (ctx)->
-  ctx.passthru 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' #...
+  ctx.map 'some/module', {}
+  ctx.map '/.*_controller$/', (options)-> #...
+  ctx.map /.*_view/, (options)-> #...
 ```
+or
+```coffeescript
+Isolate.configure require, (ctx)->
+  ctx.map
+    'some/module'      : {}
+    '/.*_controller$/' : (options)-> #...
+    '/.*_view/'        : (options)-> #...
+```
+`map` allows you to provide a specific standin implmentation to inject
+for any given _matcher_ (See the _passthru_ section above for details
+on matchers).
 
-**map**
-**mapType**
+This option expects to be provided a matcher and either a standin
+instance to inject, or a _factory_ (see `map.asFactory` below). As
+syntactic sugar, you can also pass an object map of matcher: standin
+pairs too (second example above)
+
+_Note:_ Conflicts between `passthru`, `map`, and overlapping matchers of
+each are resolved by choosing the last-defined matching rule.
+
+```coffeescript
+Isolate.configure require, (ctx)->
+  ctx.mapType 'function', ->
+  ctx.mapType 'object', {}
+```
+or
+```coffeescript
+Isolate.configure require, (ctx)->
+  ctx.mapType
+    'function': ->
+    'object'  : {}
+```
+`mapType` allows you to setup "catch-all" rules to construct standins
+for modules which failed to match any `map` or `passthru` rules defined.
+
+This option expects to be provided a _type_ argument,and either a
+standin instance to inject, or a _factory_ (see `map.asFactory` below).
+As syntactic sugar, you can also pass an object map of type: standin
+paris too (second example above).
+
+The _type_ argument is compared (case insensitive) to the output of running
+`Object.prototype.toString` on the actual module implmentation. Just the
+substring containing the type is compared, so for a dependency which is
+a function, `Object.prototype.toString` would return `[object Function]`
+which means you should specify 'function' as the type to map.
 
 #### Mapping to literals vs factories
 **map.asFactory**
