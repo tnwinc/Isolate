@@ -128,6 +128,7 @@ realistically build suitable standins for.
 
 This option expects a list of _matchers_, and can be called multiple
 times. A _matcher_ can be one of:
+
 * A RegExp designed to match against the full module path
 * A string staring and ending with a '/', which will be turned into a
   RegExp instance by removing the '/' from the start and end and calling
