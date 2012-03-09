@@ -146,6 +146,7 @@ Isolate.configure require, (ctx)->
   ctx.map /.*_view/, (options)-> #...
 ```
 or
+
 ```coffeescript
 Isolate.configure require, (ctx)->
   ctx.map
@@ -171,6 +172,7 @@ Isolate.configure require, (ctx)->
   ctx.mapType 'object', {}
 ```
 or
+
 ```coffeescript
 Isolate.configure require, (ctx)->
   ctx.mapType
@@ -191,10 +193,29 @@ substring containing the type is compared, so for a dependency which is
 a function, `Object.prototype.toString` would return `[object Function]`
 which means you should specify 'function' as the type to map.
 
-#### Mapping to literals vs factories
-**map.asFactory**
+#### Mapping to factories instead of literals
 
-### Getting Started
+```coffeescript
+Isolate.configure require, (ctx)->
+  map /.*_controller/, map.asFactory (actual_module, module_path,
+requesting_module_path)->
+    toString: -> "[Fake for #{module_path}]"
+  mapType 'function', map.asFactory (actual_module, module_path,
+requesting_module_path)->
+    fake_function = ->
+    fake_function.toString = -> "[Fake Function for #{module_path}]"
+```
+`map.asFactory` can be used to provide a factory function to `map` and
+`mapType`. The factory function will be evaluated when resolving the
+dependency and will be provided with the actual module implementation,
+the module path, and the path to the requesting module.
+
+This functionality is very helpful when you want to inject a standin for
+adding some surface area to a module for specs (like wrapping functions
+in spies), but you still want to check that the integration between the
+modules hasn't been broken.
+
+### Using Isolate in tests
 
 **requirejs / AMD**
 
