@@ -25,18 +25,21 @@ IsolateJs in your code looks like.
 **requirejs / AMD**
 
 _path/to/module.under.test.coffee_
+
 ```coffeescript
 define ['path/to/dependency'], (dependency)->
   # implementation
 ```
 
 _isolate configuration_
+
 ```coffeescript
 isolate.configure require, (ctx)->
   ctx.map 'path/to/dependency', someMethod: -> true
 ```
 
 _spec file_
+
 ```coffeescript
 define ['isolate!path/to/module.under.test'], (moduleUnderTest)->
 
@@ -48,19 +51,23 @@ define ['isolate!path/to/module.under.test'], (moduleUnderTest)->
 **node / CommonJS**
 
 _path/to/module.under.test.coffee_
+
 ```coffeescript
 dependency = require 'path/to/dependency'
 
 # implementation
+
 ```
 
 _isolate configuration_
+
 ```coffeescript
 isolate.configure require, (ctx)->
   ctx.map 'path/to/dependency', someMethod: -> true
 ```
 
 _spec file_
+
 ```coffeescript
 moduleUnderTest = isolate 'path/to/module.under.test'
 
@@ -69,17 +76,13 @@ dependency = moduleUnderTest.dependencies['path/to/dependency']
 dependency.someMethod() # true
 ```
 
-
-
 ### Installation
 
-### Getting Started
+`npm install isolate` or go to [downloads]()
 
-**requirejs / AMD**
-
-**node / CommonJS**
-
-#### Accessing Fakes from Tests
+If you are using requirejs in the browser, Isolate integrates via their
+[Loader Plugins](http://requirejs.org/docs/api.html#plugins) API. You
+should place isolate.js _"in the same directory as your app's main JS file."_
 
 ### Configuration
 
@@ -90,3 +93,11 @@ dependency.someMethod() # true
 
 #### Mapping to literals vs factories
 **map.asFactory**
+
+### Getting Started
+
+**requirejs / AMD**
+
+**node / CommonJS**
+
+#### Accessing Fakes from Tests
