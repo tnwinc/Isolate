@@ -1,0 +1,4 @@
+{
+  "name": "isolate",
+  "main": "./isolate.js"
+}
