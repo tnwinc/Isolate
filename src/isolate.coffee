@@ -12,10 +12,7 @@ getMatcherForPath = (path)->
     if path[0] + path.slice(-1) == '//'
       return new RegExp path[1...-2]
     else
-      if (path.indexOf '.') == -1
-        return new RegExp "\/#{path}\.[a-zA-Z]+$"
-      else
-        return new RegExp "\/#{path}$"
+      return new RegExp "(^|[^\w])#{path}(\.[a-zA-Z]+)?$"
 
   throw Error "Expected either a String or RegExp, but got #{getType path}"
 
