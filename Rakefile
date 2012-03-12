@@ -2,7 +2,7 @@ root=File.dirname __FILE__
 
 task :default => [:build]
 task :build do
-  system("cd #{root} && coffee --compile --output build/ src/")
+  system("cd #{root} && coffee --compile --output . src/isolate.coffee")
   system("cd #{root} && coffee --compile bootstrap.coffee")
 end
 
@@ -11,5 +11,5 @@ task :test => [:build] do
 end
 
 task :clean do
-  system "cd #{root} && rm -rf ./build ./bootstrap.js"
+  system "cd #{root} && rm -rf ./isolate.js ./bootstrap.js"
 end
