@@ -1,0 +1,10 @@
+src/
+build/
+!build/isolate.js
+.npmignore
+.gitignore
+Guardfile
+Rakefile
+bootstrap.*
+node_modules
+spec-fixtures/
