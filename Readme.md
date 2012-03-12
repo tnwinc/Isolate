@@ -30,7 +30,6 @@ more confidence and track down issues faster.
 ### Tools that go well with Isolate
 * [mocha](http://visionmedia.github.com/mocha/) as a testing framework
 * [chai](http://chaijs.com/) as an expectations framework
-* [spy]() for spies/fakes/mocks/stubs
 
 ### Examples
 Since code is worth 1024 words, here is a quick overview of what using
@@ -85,8 +84,9 @@ dependency.someMethod() # true
 ```
 
 ### Installation
+Right now, you can pick up `isolate.js` from the `build/` directory.
 
-`npm install isolate` or grab the lastest from [downloads]()
+Soon, you will be able to: `npm install isolate` or grab the lastest from [downloads]()
 
 If you are using requirejs in the browser, Isolate integrates via their
 [Loader Plugins](http://requirejs.org/docs/api.html#plugins) API. You
