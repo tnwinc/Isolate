@@ -23,7 +23,11 @@
       if (path[0] + path.slice(-1) === '//') {
         return new RegExp(path.slice(1, -2));
       } else {
-        return path;
+        if ((path.indexOf('.')) === -1) {
+          return new RegExp("\/" + path + "\.[a-zA-Z]+$");
+        } else {
+          return new RegExp("\/" + path + "$");
+        }
       }
     }
     throw Error("Expected either a String or RegExp, but got " + (getType(path)));
@@ -32,7 +36,7 @@
   build_dependencies = function(dependencies) {
     dependencies.find = function(val) {
       var mod, path, regex;
-      regex = '[object RegExp]' === getType(val) ? val : new RegExp("\/[^\/]*" + val + "[^.]*\.");
+      regex = getMatcherForPath(val);
       for (path in dependencies) {
         if (!__hasProp.call(dependencies, path)) continue;
         mod = dependencies[path];
@@ -86,6 +90,7 @@
 
     IsolationContext.prototype.isolate = function(requested_module, context) {
       var actual, clearModuleCache, dependencies, full_module_path, isolatedModule, moduleCache, path, resolveFilename;
+      context = context || this;
       resolveFilename = module.constructor._resolveFilename;
       moduleCache = module.constructor._cache;
       clearModuleCache = function() {
@@ -149,14 +154,22 @@
       });
     };
 
-    IsolationContext.prototype.configure = function(require, configurationFunction) {
+    IsolationContext.prototype.configure = function(require_instance, configurationFunction) {
       var contextConfigurator,
         _this = this;
-      this.require = require;
+      if (arguments.length === 1) {
+        configurationFunction = require;
+        require_instance = require;
+      }
+      this.require = require_instance;
+      if (typeof module !== "undefined" && module !== null) {
+        Object.getPrototypeOf(module).isolate = this.isolate;
+      }
       contextConfigurator = {
         passthru: function() {
           var path, paths, _i, _len;
           paths = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          if ('[object Array]' === getType(paths[0])) paths = paths[0];
           for (_i = 0, _len = paths.length; _i < _len; _i++) {
             path = paths[_i];
             _this.rules.unshift({
@@ -206,18 +219,35 @@
             };
           }
           return contextConfigurator;
+        },
+        reset: function() {
+          _this.rules.length = 0;
+          _this.typeHandlers = {};
+          return contextConfigurator;
         }
       };
       contextConfigurator.map.asFactory = function() {
-        var args, factory, path;
+        var args, factory, path, _ref;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        if (args.length === 1) return new IsolationFactory(args[0]);
-        path = args[0];
-        factory = args[1];
-        _this.rules.unshift({
-          matcher: getMatcherForPath(path),
-          handler: factory
-        });
+        if (args.length === 1) {
+          if ('[object Function]' === getType(args[0])) {
+            return new IsolationFactory(args[0]);
+          } else {
+            _ref = args[0];
+            for (path in _ref) {
+              if (!__hasProp.call(_ref, path)) continue;
+              factory = _ref[path];
+              contextConfigurator.map.asFactory(path, factory);
+            }
+          }
+        } else {
+          path = args[0];
+          factory = args[1];
+          _this.rules.unshift({
+            matcher: getMatcherForPath(path),
+            handler: factory
+          });
+        }
       };
       isolate_has_been_configured = true;
       return configurationFunction(contextConfigurator);

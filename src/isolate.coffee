@@ -12,16 +12,19 @@ getMatcherForPath = (path)->
     if path[0] + path.slice(-1) == '//'
       return new RegExp path[1...-2]
     else
-      return path
+      if (path.indexOf '.') == -1
+        return new RegExp "\/#{path}\.[a-zA-Z]+$"
+      else
+        return new RegExp "\/#{path}$"
+
   throw Error "Expected either a String or RegExp, but got #{getType path}"
 
 build_dependencies = (dependencies)->
   dependencies.find = (val)->
-    regex = if '[object RegExp]' == getType val then val else new RegExp "\/[^\/]*#{val}[^.]*\."
+    regex = getMatcherForPath val
     for own path, mod of dependencies
       return mod if regex.test path
   return dependencies
-
 
 
 # Provides a fully internally-used marker class
@@ -48,6 +51,7 @@ class IsolationContext
 
 
   isolate: (requested_module, context)=>
+    context = context || this
     resolveFilename = module.constructor._resolveFilename
     moduleCache = module.constructor._cache
     clearModuleCache = ->
@@ -93,9 +97,15 @@ class IsolationContext
         isolatedModule.dependencies = build_dependencies isolatedCtx.defined
         load isolatedModule
 
-  configure: (@require, configurationFunction)=>
+  configure: (require_instance, configurationFunction)=>
+    if arguments.length == 1
+      configurationFunction = require
+      require_instance = require
+    @require = require_instance
+    Object.getPrototypeOf(module).isolate = @isolate if module?
     contextConfigurator =
       passthru: (paths...)=>
+        paths= paths[0] if '[object Array]' == getType paths[0]
         for path in paths
           @rules.unshift
             matcher: getMatcherForPath path
@@ -121,15 +131,25 @@ class IsolationContext
           @typeHandlers[type] = if handler instanceof IsolationFactory then handler.factory else -> handler
         return contextConfigurator
 
+      reset: =>
+        @rules.length = 0
+        @typeHandlers = {}
+        return contextConfigurator
+
 
     contextConfigurator.map.asFactory = (args...)=>
       if args.length == 1
-        return new IsolationFactory args[0]
-      path = args[0]
-      factory = args[1]
-      @rules.unshift
-        matcher: getMatcherForPath path
-        handler: factory
+        if '[object Function]' == getType args[0]
+          return new IsolationFactory args[0]
+        else
+          for own path, factory of args[0]
+            contextConfigurator.map.asFactory path, factory
+      else
+        path = args[0]
+        factory = args[1]
+        @rules.unshift
+          matcher: getMatcherForPath path
+          handler: factory
       return undefined
 
     isolate_has_been_configured = true
