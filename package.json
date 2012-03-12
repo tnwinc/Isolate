@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "author": "The Network, Inc",
   "description": "IoC / Injection framework for CommonJs and AMD module dependencies to support Test Driven Development.",
-  "homepage": "https://github.com/tnwinc/Isolate"
+  "homepage": "https://github.com/tnwinc/Isolate",
   "main": "./build/isolate.js",
   "scripts": {
     "test": "rake test"
