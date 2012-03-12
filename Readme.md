@@ -84,9 +84,7 @@ dependency.someMethod() # true
 ```
 
 ### Installation
-Right now, you can pick up `isolate.js` from the `build/` directory.
-
-Soon, you will be able to: `npm install isolate` or grab the lastest from [downloads]()
+`npm install isolate`
 
 If you are using requirejs in the browser, Isolate integrates via their
 [Loader Plugins](http://requirejs.org/docs/api.html#plugins) API. You
