@@ -72,9 +72,7 @@
       _ref = this.rules;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         rule = _ref[_i];
-        if ((rule.matcher instanceof RegExp && rule.matcher.test(path)) || (rule.matcher === path)) {
-          return rule.handler;
-        }
+        if (rule.matcher.test(path)) return rule.handler;
       }
       return this.typeHandlers[getType(actual).toLowerCase()];
     };
@@ -154,14 +152,17 @@
       });
     };
 
-    IsolationContext.prototype.configure = function(require_instance, configurationFunction) {
-      var contextConfigurator,
+    IsolationContext.prototype.configure = function() {
+      var args, configurationFunction, contextConfigurator,
         _this = this;
-      if (arguments.length === 1) {
-        configurationFunction = require;
-        require_instance = require;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      if (args.length === 1) {
+        this.require = require;
+        configurationFunction = args[0];
+      } else {
+        this.require = args[0];
+        configurationFunction = args[1];
       }
-      this.require = require_instance;
       if (typeof module !== "undefined" && module !== null) {
         Object.getPrototypeOf(module).isolate = this.isolate;
       }

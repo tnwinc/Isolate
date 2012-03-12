@@ -4,7 +4,7 @@
   isolate_instance = require('isolate');
 
   configure = function(configurator) {
-    return isolate_instance.configure(require, function(ctx) {
+    return isolate_instance.configure(function(ctx) {
       ctx.reset();
       return typeof configurator === "function" ? configurator(ctx) : void 0;
     });

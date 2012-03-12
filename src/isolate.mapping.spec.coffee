@@ -2,7 +2,7 @@ isolate_instance = require 'isolate'
 
 # boilerplate to configure context
 configure = (configurator)->
-  isolate_instance.configure require, (ctx)->
+  isolate_instance.configure (ctx)->
     ctx.reset()
     configurator? ctx
 

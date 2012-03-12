@@ -48,7 +48,7 @@ define ['path/to/dependency'], (dependency)->
 _isolate configuration_
 
 ```coffeescript
-isolate.configure require, (ctx)->
+isolate.configure (ctx)->
   ctx.map 'path/to/dependency', someMethod: -> true
 ```
 
@@ -72,14 +72,14 @@ dependency = require 'path/to/dependency'
 _isolate configuration_
 
 ```coffeescript
-isolate.configure require, (ctx)->
+isolate.configure (ctx)->
   ctx.map 'path/to/dependency', someMethod: -> true
 ```
 
 _spec file_
 
 ```coffeescript
-moduleUnderTest = isolate 'path/to/module.under.test'
+moduleUnderTest = module.isolate 'path/to/module.under.test'
 dependency = moduleUnderTest.dependencies['path/to/dependency']
 dependency.someMethod() # true
 ```
@@ -113,7 +113,7 @@ The `test/configure-isolate.coffee` file will be similar to:
 Isolate = require 'Isolate'
 global.isolate = Isolate.isolate
 
-Isolate.configure require, (ctx)->
+Isolate.configure (ctx)->
   ctx.mapType #...
   ctx.map #...
   ctx.passthru #...
@@ -124,8 +124,14 @@ Isolate.configure require, (ctx)->
 ##### passthru
 
 ```coffeescript
-Isolate.configure require, (ctx)->
+Isolate.configure (ctx)->
   ctx.passthru 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' #...
+```
+or
+
+```coffeescript
+Isolate.configure (ctx)->
+  ctx.passthru [ 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' ]
 ```
 `passthru` allows you to specify that certain modules should be allowed through
 without injecting a standin. This is good for external libraries that
@@ -139,12 +145,13 @@ times. A _matcher_ can be one of:
 * A string staring and ending with a '/', which will be turned into a
   RegExp instance by removing the '/' from the start and end and calling
   `new RegExp()` on the resulting string
-* Any other string which must match the full module path exactly
+* Any other string which is injected into a RegExp instance which
+  attempts to match the module name
 
 ##### map
 
 ```coffeescript
-Isolate.configure require, (ctx)->
+Isolate.configure (ctx)->
   ctx.map 'some/module', {}
   ctx.map '/.*_controller$/', (options)-> #...
   ctx.map /.*_view/, (options)-> #...
@@ -152,7 +159,7 @@ Isolate.configure require, (ctx)->
 or
 
 ```coffeescript
-Isolate.configure require, (ctx)->
+Isolate.configure (ctx)->
   ctx.map
     'some/module'      : {}
     '/.*_controller$/' : (options)-> #...
@@ -173,14 +180,14 @@ each are resolved by choosing the last-defined matching rule.
 ##### mapType
 
 ```coffeescript
-Isolate.configure require, (ctx)->
+Isolate.configure (ctx)->
   ctx.mapType 'function', ->
   ctx.mapType 'object', {}
 ```
 or
 
 ```coffeescript
-Isolate.configure require, (ctx)->
+Isolate.configure (ctx)->
   ctx.mapType
     'function': ->
     'object'  : {}
@@ -202,7 +209,7 @@ which means you should specify 'function' as the type to map.
 #### Mapping to factories instead of literals
 
 ```coffeescript
-Isolate.configure require, (ctx)->
+Isolate.configure (ctx)->
   map /.*_controller/, map.asFactory (actual_module, module_path, requesting_module_path)->
     toString: -> "[Fake for #{module_path}]"
   mapType 'function', map.asFactory (actual_module, module_path, requesting_module_path)->

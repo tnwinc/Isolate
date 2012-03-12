@@ -41,7 +41,7 @@ class IsolationContext
   # this method should probably be memoized
   findMatchingHandler: (path, actual)=>
     for rule in @rules
-      return rule.handler if (rule.matcher instanceof RegExp and rule.matcher.test path) or (rule.matcher == path)
+      return rule.handler if rule.matcher.test path
     return @typeHandlers[getType(actual).toLowerCase()]
 
   processDependency: (path, actual, parent_module_path)=>
@@ -97,11 +97,13 @@ class IsolationContext
         isolatedModule.dependencies = build_dependencies isolatedCtx.defined
         load isolatedModule
 
-  configure: (require_instance, configurationFunction)=>
-    if arguments.length == 1
-      configurationFunction = require
-      require_instance = require
-    @require = require_instance
+  configure: (args...)=>
+    if args.length == 1
+      @require = require
+      configurationFunction = args[0]
+    else
+      @require = args[0]
+      configurationFunction = args[1]
     Object.getPrototypeOf(module).isolate = @isolate if module?
     contextConfigurator =
       passthru: (paths...)=>
