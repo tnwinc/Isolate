@@ -8,10 +8,10 @@ describe 'Isolate', ->
   describe 'Async require statements in module under test', ->
 
     beforeEach (done)->
-      isolate_instance.configure requirejs, (ctx)->
-        ctx.reset()
-        ctx.map 'b', name: 'fake-b'
-        ctx.ensureAsyncModules 'spec-fixtures/async-require/b'
+      isolate_instance.useRequire(requirejs)
+        .reset()
+        .map('b', name: 'fake-b')
+        .willRequire('spec-fixtures/async-require/b')
 
       requirejs ['isolate!spec-fixtures/async-require/a'], (@a)=>
         done()

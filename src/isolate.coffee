@@ -11,10 +11,6 @@
   # Simply returns its argument
   passthru = (actual)-> actual
 
-  # Keeps track of whether Isolate has been configured at
-  # all. Used to trigger an error to guide the user.
-  isolate_has_been_configured = false
-
   # Converts a RegExp or string into a matcher, given
   # specific rules around handling of strings.
   getMatcherForPath = (path)->
@@ -50,9 +46,14 @@
     constructor: ->
       # Maintains an ordered list of matcher rules
       @rules = []
+
       # Maintains a hash of type -> handler rules.
       # Consulted if no @rules match requested module.
       @typeHandlers = {}
+
+      # boostrap isolate into the module prototype
+      # if using require inside of node
+      Object.getPrototypeOf(module).isolate = @isolate
 
     # Convert a real module dependency into the appropriate
     # standin implementation.
@@ -78,10 +79,6 @@
       # Though the context can be overridden if needed via the second
       # parameter.
       context = context | this
-
-      # Notify the user if Isolate has not been configured. Isolate
-      # cannot function properly with no configuration.
-      throw Error 'Isolate has not been configured. Please see the documentation for configuration options' unless isolate_has_been_configured
 
       # Resolve the (possibly) relative module path via the reqeusting
       # module's context.
@@ -122,6 +119,10 @@
     # Trigger isolate of a particular module
     # `require ['isolate!some/module'], (some_module)->`
     load: (requested_module, req, load, config)=>
+
+      # If we haven't been given a reference to the proper require
+      # instance, assume its the global require function
+      @require or= require
 
       # Get a reference to the main require context.
       # _Note: _ This is likely to break of you are already doing
@@ -173,74 +174,60 @@
           # Pass the isolated module back to the requestor.
           load isolatedModule
 
-    # Configure the current IsolationContext instance.
-    # `Isolate.configure (ctx)->` or
-    # `Isolate.configure require, (ctx)->`
-    # The second version is useful when testing AMD defined modules
-    # in a node.js environment.
-    configure: (args...)=>
-      if args.length == 1
-        @require = require
-        configurationFunction = args[0]
+    useRequire: (@require)=>
+      return this
+
+    passthru: (paths...)=>
+      paths= paths[0] if '[object Array]' == getType paths[0]
+      for path in paths
+        @rules.unshift
+          matcher: getMatcherForPath path
+          handler: passthru
+      return this
+
+    map: (args...)=>
+      if getType(args[0]) == '[object Object]'
+        @map(path, handler) for own path, handler of args[0]
       else
-        @require = args[0]
-        configurationFunction = args[1]
-      Object.getPrototypeOf(module).isolate = @isolate if module?
-      contextConfigurator =
-        passthru: (paths...)=>
-          paths= paths[0] if '[object Array]' == getType paths[0]
-          for path in paths
-            @rules.unshift
-              matcher: getMatcherForPath path
-              handler: passthru
-          return contextConfigurator
-        map: (args...)=>
-          if getType(args[0]) == '[object Object]'
-            contextConfigurator.map(path, handler) for own path, handler of args[0]
-          else
-            path = args[0]
-            handler = args[1]
-            @rules.unshift
-              matcher: getMatcherForPath path
-              handler: if handler instanceof IsolationFactory then handler.factory else -> handler
-          return contextConfigurator
+        path = args[0]
+        handler = args[1]
+        @rules.unshift
+          matcher: getMatcherForPath path
+          handler: if handler instanceof IsolationFactory then handler.factory else -> handler
+      return this
 
-        mapType: (args...)=>
-          if getType(args[0]) == '[object Object]'
-            contextConfigurator.mapType(type, handler) for own type, handler of args[0]
-          else
-            type = "[object #{args[0].toLowerCase()}]"
-            handler = args[1]
-            @typeHandlers[type] = if handler instanceof IsolationFactory then handler.factory else -> handler
-          return contextConfigurator
+    mapType: (args...)=>
+      if getType(args[0]) == '[object Object]'
+        @mapType(type, handler) for own type, handler of args[0]
+      else
+        type = "[object #{args[0].toLowerCase()}]"
+        handler = args[1]
+        @typeHandlers[type] = if handler instanceof IsolationFactory then handler.factory else -> handler
+      return this
 
-        ensureAsyncModules: (args...)=>
-          @ensuredAsyncModules or= []
-          @ensuredAsyncModules.push args...
+    willRequire: (args...)=>
+      @ensuredAsyncModules or= []
+      @ensuredAsyncModules.push args...
+      return this
 
-        reset: =>
-          @rules.length = 0
-          @typeHandlers = {}
-          return contextConfigurator
+    reset: =>
+      @rules.length = 0
+      @typeHandlers = {}
+      return this
 
-
-      contextConfigurator.map.asFactory = (args...)=>
-        if args.length == 1
-          if '[object Function]' == getType args[0]
-            return new IsolationFactory args[0]
-          else
-            for own path, factory of args[0]
-              contextConfigurator.map.asFactory path, factory
+    mapAsFactory: (args...)=>
+      if args.length == 1
+        if '[object Function]' == getType args[0]
+          return new IsolationFactory args[0]
         else
-          path = args[0]
-          factory = args[1]
-          @rules.unshift
-            matcher: getMatcherForPath path
-            handler: factory
-        return undefined
-
-      isolate_has_been_configured = true
-      configurationFunction contextConfigurator
-
+          for own path, factory of args[0]
+            @mapAsFactory path, factory
+      else
+        path = args[0]
+        factory = args[1]
+        @rules.unshift
+          matcher: getMatcherForPath path
+          handler: factory
+      return this
 
   module.exports = new IsolationContext

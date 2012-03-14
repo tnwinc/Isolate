@@ -2,9 +2,8 @@ isolate_instance = require 'isolate'
 
 # boilerplate to configure context
 configure = (configurator)->
-  isolate_instance.configure (ctx)->
-    ctx.reset()
-    configurator? ctx
+  isolate_instance.reset()
+  configurator? isolate_instance
 
 describe 'Isolate', ->
   beforeEach ->
@@ -83,13 +82,13 @@ describe 'Isolate', ->
             (expect @a.myB.name).to.equal 'the-fake-object'
             (expect @a.myC.name).to.equal 'the-fake-object'
 
-      describe 'map.asFactory', ->
+      describe 'mapAsFactory', ->
         describe 'when used standalone', ->
           describe 'when given a single mapping rule', ->
             beforeEach ->
               configure (ctx)->
-                ctx.map.asFactory 'b', -> name: 'the-generated-fake-b'
-                ctx.map.asFactory 'c', -> name: 'the-generated-fake-c'
+                ctx.mapAsFactory 'b', -> name: 'the-generated-fake-b'
+                ctx.mapAsFactory 'c', -> name: 'the-generated-fake-c'
               @a = module.isolate 'spec-fixtures/mapping-rules/a'
 
             it 'should provide the fake implementations to the isolated module', ->
@@ -99,7 +98,7 @@ describe 'Isolate', ->
           describe 'when given a hash of mapping rules', ->
             beforeEach ->
               configure (ctx)->
-                ctx.map.asFactory
+                ctx.mapAsFactory
                   'b': -> name: 'the-generated-fake-b'
                   'c': -> name: 'the-generated-fake-c'
               @a = module.isolate 'spec-fixtures/mapping-rules/a'
@@ -112,8 +111,8 @@ describe 'Isolate', ->
           beforeEach ->
             configure (ctx)->
               ctx.map
-                'b': ctx.map.asFactory -> name: 'the-factory-fake-b'
-                'c': ctx.map.asFactory -> name: 'the-factory-fake-c'
+                'b': ctx.mapAsFactory -> name: 'the-factory-fake-b'
+                'c': ctx.mapAsFactory -> name: 'the-factory-fake-c'
             @a = module.isolate 'spec-fixtures/mapping-rules/a'
 
           it 'should provide the fake implementations to the isolated module', ->
@@ -123,7 +122,7 @@ describe 'Isolate', ->
         describe 'when used with mapType', ->
           beforeEach ->
             configure (ctx)->
-              ctx.mapType 'object', ctx.map.asFactory -> name: 'the-factory-fake-object'
+              ctx.mapType 'object', ctx.mapAsFactory -> name: 'the-factory-fake-object'
             @a = module.isolate 'spec-fixtures/mapping-rules/a'
 
           it 'should provide the fake implementations to the isolated module', ->

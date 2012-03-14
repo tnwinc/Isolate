@@ -3,8 +3,7 @@ Isolate
 
 **Isolate** is a tool to allow injection of module dependencies when
 doing Test Driven Javascript/Coffeescript development. It extends
-requirejs and node's require to act more like IoC containers than simple
-module loaders.
+requirejs and node's require to allow isolation of a module under test.
 
 Paired with a Spy/Fake/Mock framework, this allows for a powerful TDD
 environment where the code under test is properly isolated from its
@@ -44,11 +43,18 @@ define ['path/to/dependency'], (dependency)->
   # implementation
 ```
 
+_path/to/depencency.coffee_
+
+```coffeescript
+define [], ->
+  someMethod: -> # some logic
+```
+
 _isolate configuration_
 
 ```coffeescript
-isolate.configure (ctx)->
-  ctx.map 'path/to/dependency', someMethod: -> true
+isolate.map 'path/to/dependency',
+  someMethod: -> true
 ```
 
 _spec file_
@@ -68,11 +74,17 @@ dependency = require 'path/to/dependency'
 # implementation
 ```
 
+_path/to/depencency.coffee_
+
+```coffeescript
+exports.someMethod = -> # some logic
+```
+
 _isolate configuration_
 
 ```coffeescript
-isolate.configure (ctx)->
-  ctx.map 'path/to/dependency', someMethod: -> true
+isolate.map 'path/to/dependency',
+  someMethod: -> true
 ```
 
 _spec file_
@@ -111,10 +123,11 @@ The `test/configure-isolate.coffee` file will be similar to:
 Isolate = require 'Isolate'
 global.isolate = Isolate.isolate
 
-Isolate.configure (ctx)->
-  ctx.mapType #...
-  ctx.map #...
-  ctx.passthru #...
+Isolate
+  .mapType #...
+  .map #...
+  .passthru #...
+  .mapAsFactory #...
 ```
 
 #### Mapping Options
@@ -122,14 +135,12 @@ Isolate.configure (ctx)->
 ##### passthru
 
 ```coffeescript
-Isolate.configure (ctx)->
-  ctx.passthru 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' #...
+Isolate.passthru 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' #...
 ```
 or
 
 ```coffeescript
-Isolate.configure (ctx)->
-  ctx.passthru [ 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' ]
+Isolate.passthru [ 'jquery', 'underscore', /lib\/.*/, '/libraries\/.*/' ]
 ```
 `passthru` allows you to specify that certain modules should be allowed through
 without injecting a standin. This is good for external libraries that
@@ -149,19 +160,19 @@ times. A _matcher_ can be one of:
 ##### map
 
 ```coffeescript
-Isolate.configure (ctx)->
-  ctx.map 'some/module', {}
-  ctx.map '/.*_controller$/', (options)-> #...
-  ctx.map /.*_view/, (options)-> #...
+Isolate
+  .map('some/module', {})
+  .map('/.*_controller$/', (options)-> {})
+  .map(/.*_view/, (options)-> {})
 ```
 or
 
 ```coffeescript
-Isolate.configure (ctx)->
-  ctx.map
+Isolate
+  .map
     'some/module'      : {}
-    '/.*_controller$/' : (options)-> #...
-    '/.*_view/'        : (options)-> #...
+    '/.*_controller$/' : (options)-> {}
+    '/.*_view/'        : (options)-> {}
 ```
 `map` allows you to provide a specific standin implementation to inject
 for any given _matcher_ (See the _passthru_ section above for details
@@ -178,15 +189,15 @@ each are resolved by choosing the last-defined matching rule.
 ##### mapType
 
 ```coffeescript
-Isolate.configure (ctx)->
-  ctx.mapType 'function', ->
-  ctx.mapType 'object', {}
+Isolate
+  .mapType 'function', ->
+  .mapType 'object', {}
 ```
 or
 
 ```coffeescript
-Isolate.configure (ctx)->
-  ctx.mapType
+Isolate
+  .mapType
     'function': ->
     'object'  : {}
 ```
@@ -206,21 +217,68 @@ which means you should specify 'function' as the type to map.
 
 #### Mapping to factories instead of literals
 
+##### Usage as a rule mapper
+
 ```coffeescript
-Isolate.configure (ctx)->
-  map /.*_controller/, map.asFactory (actual_module, module_path, requesting_module_path)->
+Isolate
+  .mapAsFactory 'some/module',
+    (actual, module_path, requesting_module_path)-> {}
+  .mapAsFactory '/.*_controller$/',
+    (actual, module_path, requesting_module_path)->
+      (options)-> {}
+  .mapAsFactory /.*_view/,
+    (actual, module_path, requesting_module_path)->
+      (options)-> {}
+```
+or
+
+```coffeescript
+Isolate
+  .map
+    'some/module'      : (actual, module_path, requesting_module_path)-> {}
+    '/.*_controller$/' : (actual, module_path, requesting_module_path)->
+                           (options)-> {}
+    '/.*_view/'        : (actual, module_path, requesting_module_path)->
+                           (options)-> {}
+```
+`mapAsFactory` allows you to provide a dynamically generated standin implementation
+to inject with the possibility to customize the standin to the requested
+module details. `mapAsFactory` follows the same _matcher_ rules described in the
+_passthru_ section above.
+
+This option expects to be provided a matcher and a function which
+generates the standin to inject. The function is provided 3 parameters
+
+* `actual` The real module instance which is being "faked" out.
+* `requested_module_path` The full module path to the module being
+  "faked" out.
+* `requesting_module_path` The full module path to the module being
+  isolated.
+
+As syntactic sugar, you can also pass an object map of matcher: standin
+pairs too (second example above)
+
+_Note:_ Conflicts between `passthru`, `map`, and overlapping matchers of
+each are resolved by choosing the last-defined matching rule.
+
+##### Usage as a modifier to `map` and `mapType`
+
+```coffeescript
+Isolate
+  .map /.*_controller/, Isolate.mapAsFactory (actual_module, module_path, requesting_module_path)->
     toString: -> "[Fake for #{module_path}]"
-  mapType 'function', map.asFactory (actual_module, module_path, requesting_module_path)->
+  .mapType 'function', Isolate.mapAsFactory (actual_module, module_path, requesting_module_path)->
     fake_function = ->
     fake_function.toString = -> "[Fake Function for #{module_path}]"
     return fake_function
 ```
-`map.asFactory` can be used to provide a factory function to `map` and
-`mapType`. The factory function will be evaluated when resolving the
-dependency and will be provided with the actual module implementation,
-the module path, and the path to the requesting module.
 
-This functionality is very helpful when you want to inject a standin for
+`map.asFactory` can also be used to provide a factory function to `map` and
+`mapType`. The factory function will be evaluated when resolving the
+dependency. The parameters passed to the factory function are the same
+as described in the _Usage as a rule mapper_.
+
+_Note_: `mapAsFactory` is very helpful when you want to inject a standin for
 adding some surface area to a module for specs (like wrapping functions
 in spies), but you still want to check that the integration between the
 modules hasn't been broken.
