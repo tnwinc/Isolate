@@ -7,3 +7,4 @@ Rakefile
 bootstrap.*
 node_modules/
 spec-fixtures/
+npm-shrinkwrap.json
