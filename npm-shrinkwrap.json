@@ -1,0 +1,12 @@
+{
+  "name": "isolate",
+  "version": "0.0.2",
+  "dependencies": {
+    "requirejs": {
+      "version": "1.0.7"
+    },
+    "chai": {
+      "version": "0.5.0"
+    }
+  }
+}
