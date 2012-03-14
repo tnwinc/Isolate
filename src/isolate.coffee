@@ -137,9 +137,11 @@
         baseUrl: mainCtx.config.baseUrl
       isolatedCtx = @require.s.contexts[isolatedContextName]
 
+      modulesToLoad = [requested_module].concat @ensuredAsyncModules || []
+
       # Require the requested module into the real
       # require context in order to load all its depencencies.
-      req [requested_module], (mod)=>
+      req modulesToLoad, (mod)=>
 
         # Clear out any items in the secondary require context
         # module cache.
@@ -151,7 +153,7 @@
         # the secondary require context.
         for own modName, modVal of mainCtx.defined
           continue if modName == requested_module
-          isolatedCtx.defined[modName] = @processDependency modName, modVal, requested_module
+          isolatedCtx.defined[modName] = @processDependency modName, modVal, requested_module unless modName == 'isolate'
           isolatedCtx.loaded[modName] = true
 
         # Remove the requested module from the secondary
@@ -211,6 +213,10 @@
             handler = args[1]
             @typeHandlers[type] = if handler instanceof IsolationFactory then handler.factory else -> handler
           return contextConfigurator
+
+        ensureAsyncModules: (args...)=>
+          @ensuredAsyncModules or= []
+          @ensuredAsyncModules.push args...
 
         reset: =>
           @rules.length = 0
