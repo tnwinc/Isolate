@@ -29,8 +29,13 @@
   build_dependencies = (dependencies)->
     dependencies.find = (val)->
       regex = getMatcherForPath val
+      matching_dependencies = []
       for own path, mod of dependencies
-        return mod if regex.test path
+        continue if 0 == path.indexOf 'isolate!'
+        matching_dependencies.push path if regex.test path
+      if matching_dependencies.length > 1
+        throw Error "Ambiguous call to find dependency: '#{val}' matched: [#{matching_dependencies}]"
+      return dependencies[matching_dependencies[0]]
     return dependencies
 
 
