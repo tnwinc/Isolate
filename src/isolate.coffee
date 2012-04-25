@@ -21,7 +21,7 @@
       if path[0] + path.slice(-1) == '//'
         return new RegExp path[1...-2]
       else
-        return new RegExp "(^|[^\w])#{path}(\.[a-zA-Z]+)?$"
+        return new RegExp "(^|[^a-zA-Z0-9_])#{path}(\.[a-zA-Z]+)?$"
     throw Error "Expected either a String or RegExp, but got #{getType path}"
 
   # Extend a dependencies array with a find function
@@ -171,6 +171,7 @@
         # require context, so that it gets the standin
         # implementations injected via the poisioned cache.
         isolatedRequire [requested_module], (isolatedModule)->
+          throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
 
           # Attach the standin dependencies to the `.dependencies`
           # property.
