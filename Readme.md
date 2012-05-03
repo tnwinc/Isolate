@@ -130,7 +130,16 @@ Isolate
   .mapAsFactory #...
 ```
 
-#### Mapping Options
+#### Configuration Options
+
+##### useRequire
+
+```coffeescript
+Isolate.useRequire require
+```
+`useRequire` allows you to specify the instance of require.js require to use
+when isolating AMD modules. If this is not set, Isolate will try to use the global
+`require` instance by default.
 
 ##### passthru
 
