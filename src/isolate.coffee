@@ -94,7 +94,13 @@
       module.constructor._cache = {}
 
       # Load the requested module into the newly clean cache.
-      require full_module_path
+      try
+        require full_module_path
+      catch err
+        urlForException = "https://github.com/tnwinc/Isolate/wiki/Error:-An-error-occurred-while-preparing-to-isolate-the-module"
+        err.message = "An error occurred while preparing to isolate the module: #{requested_module}\nFor more information, see #{urlForException}\nInner Exception:\n#{err.message}"
+        throw err
+
 
       # Remove the requested module from the cache so that only its
       # depencency tree is remaining.
@@ -147,38 +153,43 @@
 
       # Require the requested module into the real
       # require context in order to load all its depencencies.
-      req modulesToLoad, (mod)=>
+      try
+        req modulesToLoad, (mod)=>
 
-        # Clear out any items in the secondary require context
-        # module cache.
-        delete isolatedCtx.defined[key] for key in isolatedCtx.defined
-        delete isolatedCtx.loaded[key] for key in isolatedCtx.loaded
+          # Clear out any items in the secondary require context
+          # module cache.
+          delete isolatedCtx.defined[key] for key in isolatedCtx.defined
+          delete isolatedCtx.loaded[key] for key in isolatedCtx.loaded
 
-        # Generate the proper standin for each module defined
-        # in the real require context's cache and inject it into
-        # the secondary require context.
-        for own modName, modVal of mainCtx.defined
-          continue if modName == requested_module
-          isolatedCtx.defined[modName] = @processDependency modName, modVal, requested_module unless modName == 'isolate'
-          isolatedCtx.loaded[modName] = true
+          # Generate the proper standin for each module defined
+          # in the real require context's cache and inject it into
+          # the secondary require context.
+          for own modName, modVal of mainCtx.defined
+            continue if modName == requested_module
+            isolatedCtx.defined[modName] = @processDependency modName, modVal, requested_module unless modName == 'isolate'
+            isolatedCtx.loaded[modName] = true
 
-        # Remove the requested module from the secondary
-        # require context's cache.
-        delete isolatedCtx.defined[requested_module]
-        delete isolatedCtx.loaded[requested_module]
+          # Remove the requested module from the secondary
+          # require context's cache.
+          delete isolatedCtx.defined[requested_module]
+          delete isolatedCtx.loaded[requested_module]
 
-        # Require the requested module using the secondary
-        # require context, so that it gets the standin
-        # implementations injected via the poisioned cache.
-        isolatedRequire [requested_module], (isolatedModule)->
-          throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
+          # Require the requested module using the secondary
+          # require context, so that it gets the standin
+          # implementations injected via the poisioned cache.
+          isolatedRequire [requested_module], (isolatedModule)->
+            throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
 
-          # Attach the standin dependencies to the `.dependencies`
-          # property.
-          isolatedModule.dependencies = build_dependencies isolatedCtx.defined
+            # Attach the standin dependencies to the `.dependencies`
+            # property.
+            isolatedModule.dependencies = build_dependencies isolatedCtx.defined
 
-          # Pass the isolated module back to the requestor.
-          load isolatedModule
+            # Pass the isolated module back to the requestor.
+            load isolatedModule
+      catch err
+        urlForException = "https://github.com/tnwinc/Isolate/wiki/Error:-An-error-occurred-while-preparing-to-isolate-the-module"
+        err.message = "An error occurred while preparing to isolate the module: #{requested_module}\nFor more information, see #{urlForException}\nInner Exception:\n#{err.message}"
+        throw err
 
     useRequire: (@require)=>
       return this
