@@ -123,6 +123,10 @@
       # Make the standins available via the `.dependencies` property.
       isolatedModule.dependencies = build_dependencies dependencies
 
+      # Clear the module cache so that modules will
+      # be re-isolated as needed
+      module.constructor._cache = {}
+
       # Return the isolated module
       return isolatedModule
 
@@ -183,6 +187,11 @@
             # Attach the standin dependencies to the `.dependencies`
             # property.
             isolatedModule.dependencies = build_dependencies isolatedCtx.defined
+
+            # Clear the main module cache so that modules will
+            # be re-isolated as needed
+            delete mainCtx.defined[key] for key in mainCtx.defined
+            delete mainCtx.loaded[key] for key in mainCtx.loaded
 
             # Pass the isolated module back to the requestor.
             load isolatedModule
