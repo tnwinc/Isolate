@@ -21,7 +21,7 @@
       if path[0] + path.slice(-1) == '//'
         return new RegExp path[1...-2]
       else
-        return new RegExp "(^|[^a-zA-Z0-9_])#{path}(\.[a-zA-Z]+)?$"
+        return new RegExp "(^|[^a-zA-Z0-9_])#{path}$"
     throw Error "Expected either a String or RegExp, but got #{getType path}"
 
   # Extend a dependencies array with a find function
