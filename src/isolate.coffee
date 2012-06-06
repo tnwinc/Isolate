@@ -83,7 +83,7 @@
       # shown above.
       # Though the context can be overridden if needed via the second
       # parameter.
-      context = context | this
+      context = context or this
 
       # Resolve the (possibly) relative module path via the reqeusting
       # module's context.
@@ -126,6 +126,10 @@
       # Clear the module cache so that modules will
       # be re-isolated as needed
       module.constructor._cache = {}
+
+      # Run any registered handlers
+      if @isolateCompleteHandlers?.length
+        handler isolatedModule for handler in @isolateCompleteHandlers
 
       # Return the isolated module
       return isolatedModule
@@ -181,7 +185,7 @@
           # Require the requested module using the secondary
           # require context, so that it gets the standin
           # implementations injected via the poisioned cache.
-          isolatedRequire [requested_module], (isolatedModule)->
+          isolatedRequire [requested_module], (isolatedModule)=>
             throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
 
             # Attach the standin dependencies to the `.dependencies`
@@ -192,6 +196,10 @@
             # be re-isolated as needed
             delete mainCtx.defined[key] for key in mainCtx.defined
             delete mainCtx.loaded[key] for key in mainCtx.loaded
+
+            # Run any registered handlers
+            if @isolateCompleteHandlers?.length
+              handler isolatedModule for handler in @isolateCompleteHandlers
 
             # Pass the isolated module back to the requestor.
             load isolatedModule
@@ -254,6 +262,10 @@
         @rules.unshift
           matcher: getMatcherForPath path
           handler: factory
+      return this
+
+    isolateComplete: (handler)->
+      (@isolateCompleteHandlers = @isolateCompleteHandlers || []).push handler
       return this
 
   module.exports = new IsolationContext

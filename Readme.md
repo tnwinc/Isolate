@@ -224,6 +224,15 @@ substring containing the type is compared, so for a dependency which is
 a function, `Object.prototype.toString` would return `[object Function]`
 which means you should specify 'function' as the type to map.
 
+##### isolateComplete
+
+```coffeescript
+Isolate.isolateComplete (module)->
+```
+`isolateComplete` allows you to perform last-minute processing of a
+module before it is injected to the requesting code. The `module`
+reference has the `dependencies` property already prepared.
+
 #### Mapping to factories instead of literals
 
 ##### Usage as a rule mapper
