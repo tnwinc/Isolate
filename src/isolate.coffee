@@ -26,7 +26,7 @@
       if path[0] + path.slice(-1) == '//'
         return new RegExp path[1...-2]
       else
-        return new RegExp "(^|[^a-zA-Z0-9_])#{path}$"
+        return new RegExp "(^|[^a-zA-Z0-9_])#{path}(\.[a-zA-Z]*)?$"
     throw Error "Expected either a String or RegExp, but got #{getType path}"
 
   # Extend a dependencies array with a find function
@@ -143,7 +143,6 @@
     # Trigger isolate of a particular module
     # `require ['isolate!some/module'], (some_module)->`
     load: (requested_module, req, load, config)=>
-
       # If we haven't been given a reference to the proper require
       # instance, assume its the global require function
       @_require or= require
@@ -171,14 +170,13 @@
 
           # Clear out any items in the secondary require context
           # module cache.
-          delete isolatedCtx.defined[key] for key in isolatedCtx.defined
-          #delete isolatedCtx.registry[key] for key in isolatedCtx.registry
+          isolatedCtx.undef _module for _module of isolatedCtx.defined
 
           # Generate the proper standin for each module defined
           # in the real require context's cache and inject it into
           # the secondary require context.
           for own modName, modVal of mainCtx.defined
-            continue if modName == requested_module
+            continue if modName is requested_module
             isolatedCtx.defined[modName] = @processDependency modName, modVal, requested_module unless modName == 'isolate'
             #isolatedCtx.registry[modName] = true
 
