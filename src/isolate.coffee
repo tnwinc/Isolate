@@ -53,7 +53,10 @@
   # The main class for Isolate
   class IsolationContext
 
-    constructor: ->
+    constructor: (@name = 'default')->
+      # Update the contexts reference
+      IsolationContext.contexts[@name] = this
+
       # Maintains an ordered list of matcher rules
       @rules = []
 
@@ -145,23 +148,31 @@
     load: (requested_module, req, load, config)=>
       # If we haven't been given a reference to the proper require
       # instance, assume its the global require function
-      @_require or= require
+      IsolationContext._require or= require
+
+      # Extract the desired isolation context name from the
+      # requested module name
+      if requested_module.indexOf ':' > -1
+        [isolationContextName, requested_module] = requested_module.split ':'
+      else
+        isolationContextName = 'default'
+      isolationCtx = IsolationContext.contexts[isolationContextName]
 
       # Get a reference to the main require context.
       # _Note: _ This is likely to break of you are already doing
       # interesting things with the require contexts, such as
       # multiversion support.
-      mainCtx = @_require?.s?.contexts?['_'] or @_require?.context
+      mainCtx = IsolationContext._require?.s?.contexts?['_'] or IsolationContext._require?.context
 
       # Generate a secondary require context, used to hold the
       # standins.
       isolatedContextName = "isolated_#{Math.floor Math.random() * 100000}"
-      isolatedRequire = @_require.config
+      isolatedRequire = IsolationContext._require.config
         context: isolatedContextName
         baseUrl: mainCtx.config.baseUrl
-      isolatedCtx = @_require.s.contexts[isolatedContextName]
+      isolatedRequireCtx = IsolationContext._require.s.contexts[isolatedContextName]
 
-      modulesToLoad = [requested_module].concat @ensuredAsyncModules || []
+      modulesToLoad = [requested_module].concat isolationCtx.ensuredAsyncModules || []
 
       # Require the requested module into the real
       # require context in order to load all its depencencies.
@@ -170,20 +181,19 @@
 
           # Clear out any items in the secondary require context
           # module cache.
-          isolatedCtx.undef _module for _module of isolatedCtx.defined
+          isolatedRequireCtx.undef _module for _module of isolatedRequireCtx.defined
 
           # Generate the proper standin for each module defined
           # in the real require context's cache and inject it into
           # the secondary require context.
           for own modName, modVal of mainCtx.defined
             continue if modName is requested_module
-            isolatedCtx.defined[modName] = @processDependency modName, modVal, requested_module unless modName == 'isolate'
-            #isolatedCtx.registry[modName] = true
+            isolatedRequireCtx.defined[modName] = isolationCtx.processDependency modName, modVal, requested_module unless modName == 'isolate'
 
           # Remove the requested module from the secondary
           # require context's cache.
-          delete isolatedCtx.defined[requested_module]
-          #delete isolatedCtx.registry[requested_module]
+          delete isolatedRequireCtx.defined[requested_module]
+          #delete isolatedRequireCtx.registry[requested_module]
 
           # Require the requested module using the secondary
           # require context, so that it gets the standin
@@ -193,7 +203,7 @@
 
             # Attach the standin dependencies to the `.dependencies`
             # property.
-            isolatedModule.dependencies = build_dependencies isolatedCtx.defined
+            isolatedModule.dependencies = build_dependencies isolatedRequireCtx.defined
 
             # Clear the main module cache so that modules will
             # be re-isolated as needed
@@ -201,8 +211,8 @@
             #delete mainCtx.registry[key] for key in mainCtx.registry
 
             # Run any registered handlers
-            if @isolateCompleteHandlers?.length
-              handler isolatedModule for handler in @isolateCompleteHandlers
+            if isolationCtx.isolateCompleteHandlers?.length
+              handler isolatedModule for handler in isolationCtx.isolateCompleteHandlers
 
             # Pass the isolated module back to the requestor.
             load isolatedModule
@@ -211,7 +221,8 @@
         err.message = "An error occurred while preparing to isolate the module: #{requested_module}\nFor more information, see #{urlForException}\nInner Exception:\n#{err.message}"
         throw err
 
-    useRequire: (@_require)=>
+    useRequire: (_require)=>
+      IsolationContext._require = _require
       return this
 
     passthru: (paths...)=>
@@ -270,5 +281,13 @@
     isolateComplete: (handler)->
       (@isolateCompleteHandlers = @isolateCompleteHandlers || []).push handler
       return this
+
+    newContext: (name)->
+      name = name or "isolation_context_#{Math.floor Math.random() * 10000}"
+      ctx = new IsolationContext(name)
+      ctx.rules = this.rules.slice 0
+      return ctx
+
+  IsolationContext.contexts = {}
 
   return new IsolationContext

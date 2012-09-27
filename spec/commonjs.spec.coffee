@@ -8,5 +8,5 @@ describe "Using node's require", ->
     isolate.reset()
 
   require('all_behaviours')
-    .isolateModulesLikeThis( (module_name)-> isolate.require module_name)
-    .ensure_all_behaviours(isolate)
+    .ensure_all_behaviours(isolate, (module_name, isolationContext = isolate)->
+      isolationContext.require module_name)

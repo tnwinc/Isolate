@@ -22,9 +22,9 @@ describe "Using amd require", ->
       isolate.reset()
 
   require('all_behaviours')
-    .isolateModulesLikeThis (module_name)->
+    .ensure_all_behaviours isolate, (module_name, isolationContext = isolate)->
       moduleUnderTest = undefined
-      requirejs ["isolate!#{module_name}"], (mut)->
+      isolationContext = if isolationContext.name? then "#{isolationContext.name}:" else ''
+      requirejs ["isolate!#{isolationContext}#{module_name}"], (mut)->
         moduleUnderTest = mut
       return moduleUnderTest
-    .ensure_all_behaviours(isolate)
