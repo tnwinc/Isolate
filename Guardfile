@@ -3,6 +3,5 @@
 
 guard 'coffeescript', :output => '.' do
     watch(%r{^src/(isolate.coffee)})
-    watch(%r{^([^/]+\.coffee)})
-    watch(%r{^(spec-fixtures.*.coffee)})
+    watch(%r{^(spec.*coffee)})
 end

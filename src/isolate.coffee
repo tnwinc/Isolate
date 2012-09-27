@@ -1,6 +1,11 @@
-# module loader boilerplate to allow this module to be
-# loaded by either requirejs(AMD) or node's require (CommonJs)
-+{define: if typeof define == 'function' then define else (F)-> F require, exports, module}.define (require, exports, module)->
+((root, factory)->
+  if typeof exports is 'object'
+    module.exports = factory()
+  else if typeof define is 'function' and define.amd
+    define([],factory)
+  else
+    root.Isolate = factory()
+) this, ->
 
   #### Helpers to keep later code more readable
   # Get's the Object.prototype.toString "type" of an object.
@@ -58,7 +63,7 @@
 
       # boostrap isolate into the module prototype
       # if using require inside of node
-      Object.getPrototypeOf(module).isolate = @isolate
+      #Object.getPrototypeOf(module).isolate = @isolate
 
     # Convert a real module dependency into the appropriate
     # standin implementation.
@@ -77,7 +82,7 @@
     #### Node.js / CommonJs
     # Trigger isolation of a particular module.
     # `module.isolate 'some/module'`
-    isolate: (requested_module, context)=>
+    require: (requested_module, context)=>
 
       # The runtime context here is the requesting module, if called as
       # shown above.
@@ -141,21 +146,21 @@
 
       # If we haven't been given a reference to the proper require
       # instance, assume its the global require function
-      @require or= require
+      @_require or= require
 
       # Get a reference to the main require context.
       # _Note: _ This is likely to break of you are already doing
       # interesting things with the require contexts, such as
       # multiversion support.
-      mainCtx = @require.s.contexts['_']
+      mainCtx = @_require?.s?.contexts?['_'] or @_require?.context
 
       # Generate a secondary require context, used to hold the
       # standins.
       isolatedContextName = "isolated_#{Math.floor Math.random() * 100000}"
-      isolatedRequire = @require.config
+      isolatedRequire = @_require.config
         context: isolatedContextName
         baseUrl: mainCtx.config.baseUrl
-      isolatedCtx = @require.s.contexts[isolatedContextName]
+      isolatedCtx = @_require.s.contexts[isolatedContextName]
 
       modulesToLoad = [requested_module].concat @ensuredAsyncModules || []
 
@@ -167,7 +172,7 @@
           # Clear out any items in the secondary require context
           # module cache.
           delete isolatedCtx.defined[key] for key in isolatedCtx.defined
-          delete isolatedCtx.loaded[key] for key in isolatedCtx.loaded
+          #delete isolatedCtx.registry[key] for key in isolatedCtx.registry
 
           # Generate the proper standin for each module defined
           # in the real require context's cache and inject it into
@@ -175,12 +180,12 @@
           for own modName, modVal of mainCtx.defined
             continue if modName == requested_module
             isolatedCtx.defined[modName] = @processDependency modName, modVal, requested_module unless modName == 'isolate'
-            isolatedCtx.loaded[modName] = true
+            #isolatedCtx.registry[modName] = true
 
           # Remove the requested module from the secondary
           # require context's cache.
           delete isolatedCtx.defined[requested_module]
-          delete isolatedCtx.loaded[requested_module]
+          #delete isolatedCtx.registry[requested_module]
 
           # Require the requested module using the secondary
           # require context, so that it gets the standin
@@ -195,7 +200,7 @@
             # Clear the main module cache so that modules will
             # be re-isolated as needed
             delete mainCtx.defined[key] for key in mainCtx.defined
-            delete mainCtx.loaded[key] for key in mainCtx.loaded
+            #delete mainCtx.registry[key] for key in mainCtx.registry
 
             # Run any registered handlers
             if @isolateCompleteHandlers?.length
@@ -208,7 +213,7 @@
         err.message = "An error occurred while preparing to isolate the module: #{requested_module}\nFor more information, see #{urlForException}\nInner Exception:\n#{err.message}"
         throw err
 
-    useRequire: (@require)=>
+    useRequire: (@_require)=>
       return this
 
     passthru: (paths...)=>
@@ -268,4 +273,4 @@
       (@isolateCompleteHandlers = @isolateCompleteHandlers || []).push handler
       return this
 
-  module.exports = new IsolationContext
+  return new IsolationContext
