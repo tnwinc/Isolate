@@ -8,13 +8,15 @@ end
 
 test_namespace = namespace :test do
   task :commonjs => [:build] do
-    puts 'testing: commonjs'
-    #system "cd #{root} && NODE_PATH=.:$NODE_PATH mocha --compilers coffee:coffee-script -r ./spec/commonjs/bootstrap.js --reporter spec ./spec/commonjs/*.spec.coffee"
+    Dir.chdir root do
+      system "NODE_PATH=.:./spec/commonjs/modules_for_testing:$NODE_PATH mocha --compilers coffee:coffee-script -r ./spec/commonjs/bootstrap.js --reporter spec ./spec/commonjs/*.spec.coffee"
+    end
   end
 
   task :requirejs => [:build] do
-    puts 'testing: requirejs'
-    #system "cd #{root} && NODE_PATH=.:$NODE_PATH mocha --compilers coffee:coffee-script -r ./spec/requirejs/bootstrap.js --globals 'define,requirejsVars' --reporter spec ./spec/requirejs/*.spec.coffee"
+    Dir.chdir root do
+      system "NODE_PATH=.:$NODE_PATH mocha --compilers coffee:coffee-script -r ./spec/requirejs/bootstrap.js --globals 'define,requirejsVars' --reporter spec ./spec/requirejs/*.spec.coffee"
+    end
   end
 end
 
@@ -23,5 +25,8 @@ task :test do
 end
 
 task :clean do
-  system "cd #{root} && rm -rf ./isolate.js src/**/*.js spec/**/*.js"
+  Dir.chdir root do
+    FileUtils.rm(FileList['*.js'])
+    FileUtils.rm(FileList['spec/**/*.js'])
+  end
 end
