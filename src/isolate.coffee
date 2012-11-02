@@ -146,6 +146,7 @@
     # Trigger isolate of a particular module
     # `require ['isolate!some/module'], (some_module)->`
     load: (requested_module, req, load, config)=>
+
       # If we haven't been given a reference to the proper require
       # instance, assume its the global require function
       IsolationContext._require or= require
@@ -185,7 +186,8 @@
 
           # Clear out any items in the secondary require context
           # module cache.
-          isolatedRequireCtx.undef _module for _module of isolatedRequireCtx.defined
+          undef = isolatedRequireCtx.undef or isolatedRequireCtx.require?.undef
+          undef _module for _module of isolatedRequireCtx.defined
 
           # Generate the proper standin for each module defined
           # in the real require context's cache and inject it into
@@ -197,7 +199,6 @@
           # Remove the requested module from the secondary
           # require context's cache.
           delete isolatedRequireCtx.defined[requested_module]
-          #delete isolatedRequireCtx.registry[requested_module]
 
           # Require the requested module using the secondary
           # require context, so that it gets the standin

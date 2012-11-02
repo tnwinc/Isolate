@@ -8,5 +8,11 @@ describe "Using node's require", ->
     isolate.reset()
 
   require('all_behaviours')
-    .ensure_all_behaviours isolate, (module_name, isolationContext = isolate)->
-      isolationContext.require module_name
+    .ensure_all_behaviours isolate, (module_name, fun)->
+      isolationContext = isolate
+      if(arguments.length > 2)
+        isolationContext = arguments[0]
+        module_name = arguments[1]
+        fun = arguments[2]
+      mod = isolationContext.require module_name
+      fun mod
