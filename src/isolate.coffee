@@ -26,7 +26,7 @@
       if path[0] + path.slice(-1) == '//'
         return new RegExp path[1...-2]
       else
-        return new RegExp "(^|[^a-zA-Z0-9_])#{path}(\.[a-zA-Z]*)?$"
+        return new RegExp "(^|[^a-zA-Z0-9_])#{path}([.][a-zA-Z]+)?$"
     throw Error "Expected either a String or RegExp, but got #{getType path}"
 
   # Extend a dependencies array with a find function
@@ -95,7 +95,7 @@
 
       # Resolve the (possibly) relative module path via the reqeusting
       # module's context.
-      full_module_path = module.constructor._resolveFilename(requested_module, context)[0]
+      full_module_path = module.constructor._resolveFilename(requested_module, context)
 
       # Clear module cache so that when we load the module again, only
       # it's dependency tree will be loaded.
@@ -152,7 +152,7 @@
 
       # Extract the desired isolation context name from the
       # requested module name
-      if requested_module.indexOf ':' > -1
+      if (_i = requested_module.indexOf ':') > -1
         [isolationContextName, requested_module] = requested_module.split ':'
       else
         isolationContextName = 'default'
@@ -163,6 +163,10 @@
       # interesting things with the require contexts, such as
       # multiversion support.
       mainCtx = IsolationContext._require?.s?.contexts?['_'] or IsolationContext._require?.context
+
+      # Clear out any items in the main require context
+      # module cache.
+      #mainCtx.undef _module for _module of mainCtx.defined
 
       # Generate a secondary require context, used to hold the
       # standins.
@@ -285,7 +289,9 @@
     newContext: (name)->
       name = name or "isolation_context_#{Math.floor Math.random() * 10000}"
       ctx = new IsolationContext(name)
-      ctx.rules = this.rules.slice 0
+      ctx.rules = this.rules?.slice 0
+      ctx.typeHandlers[type] = handler for type, handler of this.typeHandlers
+      ctx.isolateCompleteHandlers = this.isolateCompleteHandlers?.slice 0
       return ctx
 
   IsolationContext.contexts = {}
