@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mocha Tests</title>
+  <link rel="stylesheet" href="node_modules/mocha/mocha.css" />
+</head>
+<body>
+  <div id="mocha"></div>
+  <script src="node_modules/mocha/mocha.js"></script>
+  <script src="node_modules/expect.js/expect.js"></script>
+  <script>mocha.setup('bdd')</script>
+  <script>
+    var require = {
+      baseUrl: '../app/',
+      paths: {
+        'test': '../tests/',
+        'isolate': '../../../isolate',
+
+        'backbone': 'lib/backbone',
+        'backbone-localstorage': 'lib/backbone-localstorage',
+        'jquery': 'lib/jquery-1.7.1',
+        'underscore': 'lib/underscore',
+        'json2': 'lib/json2'
+      },
+      shim: {
+        backbone: {
+          deps: ['underscore', 'jquery'],
+          exports: 'Backbone'
+        },
+        'backbone-localstorage': ['backbone']
+      }
+    }
+  </script>
+  <script src="../app/lib/require.js"></script>
+  <script>
+    require(['isolate'], function(Isolate){
+      Isolate
+        .passthru('underscore', 'jquery',  'backbone-localstorage')
+        .map('backbone', Isolate.mapAsFactory(function(actual){
+          actual.Model.prototype.save = createSpy();
+          return actual;
+        }))
+        .mapType({
+          'object': Isolate.mapAsFactory(function(actual){
+
+            // Here we are just making a generic fake that will
+            // inject a rudimentary spy for each function it finds
+            var fake = {};
+            for(var key in actual){
+              var val = actual[key];
+              if(typeof(val) == 'function'){
+                fake[key] = createSpy();
+              }
+            }
+            return fake;
+          })
+        });
+
+      require(['test/todo.model.test'], function(){
+        mocha.run();
+      });
+    });
+
+    function createSpy(){
+      var spy = function(){
+        spy.wasCalled = true;
+        spy.calls.push(arguments);
+        return spy._ret;
+      }
+      spy.wasCalled = false;
+      spy.calls = []
+      spy.returns = function(ret){
+        spy._ret = ret;
+      }
+      return spy;
+    }
+  </script>
+</body>
+</html>

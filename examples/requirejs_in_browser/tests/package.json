@@ -1,0 +1,11 @@
+{
+  "name": "isolate examples",
+  "version": "0.0.1",
+  "author": "The Network, Inc",
+  "description": "Examples of using Isolatejs",
+  "homepage": "https://github.com/tnwinc/Isolate",
+  "dependencies": {
+    "mocha": ">= 1.6.0"
+  },
+  "engine": "node >= 0.6.0"
+}
