@@ -165,10 +165,6 @@
       # multiversion support.
       mainCtx = IsolationContext._require?.s?.contexts?['_'] or IsolationContext._require?.context
 
-      # Clear out any items in the main require context
-      # module cache.
-      #mainCtx.undef _module for _module of mainCtx.defined
-
       # Generate a secondary require context, used to hold the
       # standins.
       isolatedContextName = "isolated_#{Math.floor Math.random() * 100000}"
