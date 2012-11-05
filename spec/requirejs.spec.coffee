@@ -7,24 +7,31 @@ requirejs.config
   baseUrl: path.join __dirname, 'modules_for_testing', 'requirejs'
 global.define = global.requirejs = requirejs
 
-isolate = requirejs 'isolate'
-isolate.useRequire(requirejs)
+runTests = (isolate)->
+  describe "Using amd require", ->
 
+    beforeEach ->
+      mainCtx = requirejs?.s?.contexts?['_'] or requirejs?.context
+      undef = mainCtx.undef or mainCtx.require.undef
+      undef _module for _module of mainCtx.defined
+      isolate.reset()
 
-describe "Using amd require", ->
+    require('all_behaviours')
+      .ensure_all_behaviours isolate, (module_name, fun)->
+        isolationContext = isolate
+        if(arguments.length > 2)
+          isolationContext = arguments[0]
+          module_name = arguments[1]
+          fun = arguments[2]
+        isolationContext = if isolationContext.name? then "#{isolationContext.name}:" else ''
+        requirejs ["isolate!#{isolationContext}#{module_name}"], fun
 
-  beforeEach ->
-    mainCtx = requirejs?.s?.contexts?['_'] or requirejs?.context
-    undef = mainCtx.undef or mainCtx.require.undef
-    undef _module for _module of mainCtx.defined
-    isolate.reset()
+if requirejs.version.match /^2\.1\..*/
+  isolate = requirejs 'isolate'
+  isolate.useRequire(requirejs)
+  runTests isolate
 
-  require('all_behaviours')
-    .ensure_all_behaviours isolate, (module_name, fun)->
-      isolationContext = isolate
-      if(arguments.length > 2)
-        isolationContext = arguments[0]
-        module_name = arguments[1]
-        fun = arguments[2]
-      isolationContext = if isolationContext.name? then "#{isolationContext.name}:" else ''
-      requirejs ["isolate!#{isolationContext}#{module_name}"], fun
+else if requirejs.version.match /^2\.0\..*/
+  requirejs ['isolate'], (isolate)->
+    isolate.useRequire(requirejs)
+    runTests isolate
