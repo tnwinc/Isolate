@@ -72,7 +72,3 @@ task :debug
 def isDebug?
   ARGV[1..-1].include?('debug')
 end
-
-task :travis_install do
-  `bundle install`
-end
