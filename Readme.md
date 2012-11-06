@@ -1,4 +1,4 @@
-Isolate
+Isolate [![Build Status](https://secure.travis-ci.org/tnwinc/Isolate.png)](http://travis-ci.org/tnwinc/Isolate)
 ===============
 
 **Isolate** is a tool to allow injection of module dependencies when
