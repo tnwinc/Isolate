@@ -4,8 +4,8 @@ task :default => [:build]
 
 desc 'Create js files from coffee sources'
 task :build do
-  system("cd #{root} && coffee --compile --output . src/isolate.coffee")
-  system("cd #{root} && coffee --compile spec")
+  system("cd #{root} && bundle exec coffee --compile --output . src/isolate.coffee")
+  system("cd #{root} && bundle exec coffee --compile spec")
 end
 
 test_namespace = namespace :test do
