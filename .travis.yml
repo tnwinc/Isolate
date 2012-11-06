@@ -1,5 +1,7 @@
 language: node_js
-before_script: bundle install
+install:
+  - bundle install
+  - npm install
 node_js:
   - 0.8
   - 0.6
