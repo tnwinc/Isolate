@@ -44,7 +44,7 @@ test_namespace = namespace :test do
       Dir.chdir root do
         puts "Running tests against requirejs version: [#{version}]"
         system "npm install requirejs@#{version}"
-        puts tests_output = `NODE_PATH=.:./spec:$NODE_PATH mocha --compilers coffee:coffee-script --globals 'define,requirejsVars' --reporter spec -C #{debug} ./spec/requirejs.spec.coffee`
+        puts tests_output = `NODE_PATH=.:./spec:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --globals 'define,requirejsVars' --reporter spec #{debug} ./spec/requirejs.spec.coffee`
         tests_passed = $?.success?
         raise('Tests Failed') unless tests_passed
         raise('Failed to load Tests') if tests_output.include? '0 tests complete'

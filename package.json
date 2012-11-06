@@ -10,7 +10,8 @@
   },
   "devDependencies": {
     "chai": "1.x.x",
-    "requirejs": "2.1.x"
+    "requirejs": "2.1.x",
+    "mocha": "1.6.x"
   },
   "engine": "node >= 0.6.0"
 }
