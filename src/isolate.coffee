@@ -43,12 +43,10 @@
       return dependencies[matching_dependencies[0]]
     return dependencies
 
-
   # Internally used marker class to flag a rule
   # handler as a factory, instead of just a function literal.
   class IsolationFactory
     constructor: (@factory)->
-
 
   # The main class for Isolate
   class IsolationContext
