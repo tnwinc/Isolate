@@ -10,7 +10,7 @@ end
 
 test_namespace = namespace :test do
   desc "Verify Isolate usage under node's version of require"
-  task :commonjs => [:build] do
+  task :commonjs do
     debug = isDebug?() ? ' debug' : ''
     Dir.chdir root do
       system "NODE_PATH=.:./spec:./spec/modules_for_testing/commonjs:$NODE_PATH mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
@@ -18,7 +18,7 @@ test_namespace = namespace :test do
   end
 
   desc "Verify Isolate usage under requirejs's version of require"
-  task :requirejs => [:build] do
+  task :requirejs do
     versions = ENV['versions'] || ENV['version'] || 'latest'
     debug = isDebug?() ? ' debug' : ''
     supportedVersionsRegex = Regexp.new("^2\.[0-9]\.[0-9]$")
@@ -71,4 +71,8 @@ task :debug
 
 def isDebug?
   ARGV[1..-1].include?('debug')
+end
+
+task :travis_install do
+  `bundle install`
 end

@@ -6,7 +6,7 @@
   "homepage": "https://github.com/tnwinc/Isolate",
   "main": "./isolate.js",
   "scripts": {
-    "test": "rake test versions=latest"
+    "test": "rake travis_install test versions=latest"
   },
   "devDependencies": {
     "chai": "1.x.x",

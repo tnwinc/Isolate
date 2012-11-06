@@ -1,7 +1,4 @@
 language: node_js
-install:
-  - bundle install
-  - npm install
 node_js:
   - 0.8
   - 0.6
