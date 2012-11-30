@@ -187,8 +187,8 @@
           # in the real require context's cache and inject it into
           # the secondary require context.
           for own modName, modVal of mainCtx.defined
-            continue if modName is requested_module
-            isolatedRequireCtx.defined[modName] = isolationCtx.processDependency modName, modVal, requested_module unless modName == 'isolate'
+            continue if modName in [requested_module, 'isolate']
+            isolatedRequireCtx.defined[modName] = isolationCtx.processDependency modName, modVal, requested_module
 
           # Remove the requested module from the secondary
           # require context's cache.
