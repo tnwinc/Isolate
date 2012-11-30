@@ -13,7 +13,7 @@ test_namespace = namespace :test do
   task :commonjs => :build do
     debug = isDebug?() ? ' debug' : ''
     Dir.chdir root do
-      system "NODE_PATH=.:./spec:./spec/modules_for_testing/commonjs:$NODE_PATH mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
+      system "NODE_PATH=.:./spec:./spec/modules_for_testing/commonjs:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
     end
   end
 
