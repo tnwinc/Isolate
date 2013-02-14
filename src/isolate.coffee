@@ -64,7 +64,9 @@
 
       # boostrap isolate into the module prototype
       # if using require inside of node
-      #Object.getPrototypeOf(module).isolate = @isolate
+      if @env is 'commonjs'
+        that = this
+        Object.getPrototypeOf(module).isolate = (mod)-> that.require mod, this
 
     # Convert a real module dependency into the appropriate
     # standin implementation.
@@ -83,7 +85,9 @@
     #### Node.js / CommonJs
     # Trigger isolation of a particular module.
     # `module.isolate 'some/module'`
-    require: (requested_module, context)=>
+    # - or -
+    # `isolate.require 'some/module', module`
+    require: (requested_module, context)->
 
       # The runtime context here is the requesting module, if called as
       # shown above.
@@ -289,6 +293,7 @@
       ctx.isolateCompleteHandlers = this.isolateCompleteHandlers?.slice 0
       return ctx
 
+  IsolationContext.env = IsolationContext.prototype.env = if typeof exports is 'object' then 'commonjs' else 'amd'
   IsolationContext.contexts = {}
 
   return new IsolationContext
