@@ -11,3 +11,4 @@ npm-shrinkwrap.json
 Gemfile*
 examples/
 spec/
+travis*

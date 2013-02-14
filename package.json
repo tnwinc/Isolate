@@ -1,6 +1,6 @@
 {
   "name": "isolate",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "author": "The Network, Inc",
   "description": "Module isolation framework for CommonJs and AMD module dependencies to support Test Driven Development.",
   "homepage": "https://github.com/tnwinc/Isolate",
