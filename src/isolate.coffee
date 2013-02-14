@@ -80,7 +80,12 @@
     findMatchingHandler: (path, actual)=>
       for rule in @rules
         return rule.handler if rule.matcher.test path
-      return @typeHandlers[getType(actual).toLowerCase()]
+      typeHandler = @typeHandlers[getType(actual).toLowerCase()]
+      return typeHandler if typeHandler?
+      if @env is 'commonjs'
+        fakeModulePath = path.replace '.js', '.isolate-fake.js'
+        try fakeModule = require fakeModulePath
+        return fakeModule
 
     #### Node.js / CommonJs
     # Trigger isolation of a particular module.
