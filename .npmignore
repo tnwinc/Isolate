@@ -8,3 +8,6 @@ bootstrap.*
 node_modules/
 spec-fixtures/
 npm-shrinkwrap.json
+Gemfile*
+examples/
+spec/
