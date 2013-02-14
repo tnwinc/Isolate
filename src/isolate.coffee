@@ -199,31 +199,39 @@
             continue if modName in [requested_module, 'isolate']
             isolatedRequireCtx.defined[modName] = isolationCtx.processDependency modName, modVal, requested_module
 
-          # Remove the requested module from the secondary
-          # require context's cache.
-          delete isolatedRequireCtx.defined[requested_module]
+          dependencies = build_dependencies isolatedRequireCtx.defined
 
-          # Require the requested module using the secondary
-          # require context, so that it gets the standin
-          # implementations injected via the poisioned cache.
-          isolatedRequire [requested_module], (isolatedModule)=>
-            throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
+          reload = (done)->
+            # Remove the requested module from the secondary
+            # require context's cache.
+            undef requested_module
 
-            # Attach the standin dependencies to the `.dependencies`
-            # property.
-            isolatedModule.dependencies = build_dependencies isolatedRequireCtx.defined
+            # Require the requested module using the secondary
+            # require context, so that it gets the standin
+            # implementations injected via the poisioned cache.
+            isolatedRequire [requested_module], (isolatedModule)=>
+              throw Error "The requested module #{requested_module} was not found." unless isolatedModule?
 
-            # Clear the main module cache so that modules will
-            # be re-isolated as needed
-            delete mainCtx.defined[key] for key in mainCtx.defined
-            #delete mainCtx.registry[key] for key in mainCtx.registry
+              # Attach the standin dependencies to the `.dependencies`
+              # property.
+              isolatedModule.dependencies = dependencies
+              reload_method_name = if isolatedModule.reload? then '_reload' else 'reload'
+              isolatedModule[reload_method_name] = reload
 
-            # Run any registered handlers
-            if isolationCtx.isolateCompleteHandlers?.length
-              handler isolatedModule for handler in isolationCtx.isolateCompleteHandlers
+              # Clear the main module cache so that modules will
+              # be re-isolated as needed
+              delete mainCtx.defined[key] for key in mainCtx.defined
+              #delete mainCtx.registry[key] for key in mainCtx.registry
 
-            # Pass the isolated module back to the requestor.
-            load isolatedModule
+              # Run any registered handlers
+              if isolationCtx.isolateCompleteHandlers?.length
+                handler isolatedModule for handler in isolationCtx.isolateCompleteHandlers
+
+              # Pass the isolated module back to the requestor.
+              done? isolatedModule
+
+          reload (isolatedModule)-> load isolatedModule
+
       catch err
         urlForException = "https://github.com/tnwinc/Isolate/wiki/Error:-An-error-occurred-while-preparing-to-isolate-the-module"
         err.message = "An error occurred while preparing to isolate the module: #{requested_module}\nFor more information, see #{urlForException}\nInner Exception:\n#{err.message}"
