@@ -1,11 +1,21 @@
 root=File.dirname __FILE__
+npm_bin=`npm bin`.strip!
 
 task :default => [:build]
 
+def run(cmd)
+  puts cmd
+  output = `#{cmd}`
+  print output
+  return output
+end
+
 desc 'Create js files from coffee sources'
 task :build do
-  system("cd #{root} && bundle exec coffee --compile --output . src/isolate.coffee")
-  system("cd #{root} && bundle exec coffee --compile spec")
+  Dir.chdir root do
+    run "#{npm_bin}/coffee --compile --output . src/isolate.coffee"
+    run "#{npm_bin}/coffee --compile spec"
+  end
 end
 
 test_namespace = namespace :test do
@@ -13,7 +23,8 @@ test_namespace = namespace :test do
   task :commonjs => :build do
     debug = isDebug?() ? ' debug' : ''
     Dir.chdir root do
-      system "NODE_PATH=.:./spec:./spec/modules_for_testing/commonjs:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
+      ENV["NODE_PATH"] = ".:./spec:./spec/modules_for_testing/commonjs:#{ENV["NODE_PATH"]}"
+      run "#{npm_bin}/mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
     end
   end
 
@@ -43,12 +54,13 @@ test_namespace = namespace :test do
     versions_to_test_against.each do |version|
       Dir.chdir root do
         puts "Running tests against requirejs version: [#{version}]"
-        system "npm install requirejs@#{version}"
-        cmd = "NODE_PATH=.:./spec:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --globals 'define,requirejsVars' --reporter spec #{debug} ./spec/requirejs.spec.coffee"
+        run "npm install requirejs@#{version}"
+        ENV["NODE_PATH"] = ".:./spec:#{ENV["NODE_PATH"]}"
+        cmd = "#{npm_bin}/mocha --compilers coffee:coffee-script --globals 'define,requirejsVars' --reporter spec #{debug} ./spec/requirejs.spec.coffee"
         if isDebug?()
           system cmd
         else
-          puts tests_output = `#{cmd}`
+          tests_output = run cmd
           raise('Failed to load Tests') if tests_output.include? '0 tests complete'
           tests_passed = $?.success?
           raise('Tests Failed') unless tests_passed
