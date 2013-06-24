@@ -28,7 +28,7 @@ runTests = (isolate)->
       undef _module for _module of mainCtx.defined
       isolate.reset()
 
-    require('all_behaviours')
+    require(path.join __dirname, "all_behaviours")
       .ensure_all_behaviours isolate, moduleFactory
 
     describe 'Handling requirejs plugins', ->

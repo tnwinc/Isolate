@@ -5,6 +5,7 @@ task :default => [:build]
 desc 'Create js files from coffee sources'
 task :build do
   system("cd #{root} && bundle exec coffee --compile --output . src/isolate.coffee")
+  system("cd #{root} && bundle exec coffee --compile --output ./node_modules src/isolate.coffee")
   system("cd #{root} && bundle exec coffee --compile spec")
 end
 
@@ -23,7 +24,7 @@ test_namespace = namespace :test do
     debug = isDebug?() ? ' debug' : ''
     supportedVersionsRegex = Regexp.new("^2\.[0-9]\.[0-9]$")
 
-    all_versions = `npm view requirejs versions | grep -oE [0-9.]+`.split
+    all_versions = `npm view requirejs versions`.scan(/[0-9.]+/)
 
     case versions
     when 'all'
@@ -44,7 +45,8 @@ test_namespace = namespace :test do
       Dir.chdir root do
         puts "Running tests against requirejs version: [#{version}]"
         system "npm install requirejs@#{version}"
-        cmd = "NODE_PATH=.:./spec:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --globals 'define,requirejsVars' --reporter spec #{debug} ./spec/requirejs.spec.coffee"
+        cmd = "node_modules/.bin/mocha --compilers coffee:coffee-script --globals 'define,requirejsVars' --reporter spec #{debug} ./spec/requirejs.spec.coffee"
+
         if isDebug?()
           system cmd
         else
