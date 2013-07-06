@@ -40,6 +40,21 @@ exports.ensure_all_behaviours = (isolate, moduleFactory)->
                   moduleFactory 'basic', (mut)->
                     (expect mut.dependency.name).to.equal 'fake dependency'
                     done()
+            forEachVariation string: 'dependency', regex: /dep.*/, regexInString: '/dep.*/', (type, matcher)->
+              describe "specifying the matcher as a #{type} and specifying a parent module", ->
+                it 'should provide the fake implementations to the isolated module if called from that parent', (done)->
+                  isolate.map matcher, 'basic', name: 'fake basic dependency'
+                  moduleFactory 'basic', (mut)->
+                    (expect mut.dependency.name).to.equal 'fake basic dependency'
+                    done()
+            forEachVariation string: 'dependency', regex: /dep.*/, regexInString: '/dep.*/', (type, matcher)->
+              describe "specifying the matcher as a #{type} and specifying a parent module", ->
+                it 'should not provide the fake implementations to the isolated module if called from elsewhere', (done)->
+                  isolate.map matcher, 'advanced', name: 'fake advanced dependency'
+                  isolate.map matcher, name: 'fake dependency'
+                  moduleFactory 'basic', (mut)->
+                    (expect mut.dependency.name).to.equal 'fake dependency'
+                    done()
 
           describe 'when given a hash of mapping rules', ->
             forEachVariation string: 'dependency', regexInString: '/dep.*/', (type, matcher)->
@@ -80,12 +95,24 @@ exports.ensure_all_behaviours = (isolate, moduleFactory)->
         describe 'mapAsFactory', ->
           describe 'when used standalone', ->
             describe 'when given a single mapping rule', ->
-              it 'should provide the fake implementations to the isolated module', (done)->
-                isolate.mapAsFactory 'dependency', -> name: 'factory fake'
-                moduleFactory 'basic', (mut)->
-                  (expect mut.dependency.name).to.equal 'factory fake'
-                  done()
-
+              describe 'with no parent module specified', ->
+                it 'should provide the fake implementations to the isolated module', (done)->
+                  isolate.mapAsFactory 'dependency', -> name: 'factory fake'
+                  moduleFactory 'basic', (mut)->
+                    (expect mut.dependency.name).to.equal 'factory fake'
+                    done()
+              describe 'with a parent module specified', ->
+                it 'should provide the fake implementations to the isolated module if requested via parent module', (done)->
+                  isolate.mapAsFactory 'dependency', 'basic', -> name: 'basic factory fake'
+                  moduleFactory 'basic', (mut)->
+                    (expect mut.dependency.name).to.equal 'basic factory fake'
+                    done()
+                it 'should not provide the fake implementations to the isolated module if requested via a different module', (done)->
+                  isolate.mapAsFactory 'dependency', 'advanced', -> name: 'advanced factory fake'
+                  isolate.mapAsFactory 'dependency', -> name: 'factory fake'
+                  moduleFactory 'basic', (mut)->
+                    (expect mut.dependency.name).to.equal 'factory fake'
+                    done()
             describe 'when given a hash of mapping rules', ->
               it 'should provide the fake implementations to the isolated module', (done)->
                 isolate.mapAsFactory
@@ -102,6 +129,19 @@ exports.ensure_all_behaviours = (isolate, moduleFactory)->
                 (expect mut.dependency.name).to.equal 'factory fake thru map'
                 done()
 
+          describe 'when used with map specifying a parent', ->
+            it 'should provide the fake implementations to the isolated module when called from parent', (done)->
+              isolate.map 'dependency', 'basic', isolate.mapAsFactory -> name: 'factory basic fake thru map'
+              moduleFactory 'basic', (mut)->
+                (expect mut.dependency.name).to.equal 'factory basic fake thru map'
+                done()
+            it 'should not provide the fake implementations to the isolated module when called from elsewhere', (done)->
+              isolate.map 'dependency', isolate.mapAsFactory -> name: 'factory fake thru map'
+              isolate.map 'dependency', 'advanced', isolate.mapAsFactory -> name: 'factory basic fake thru map'
+              moduleFactory 'basic', (mut)->
+                (expect mut.dependency.name).to.equal 'factory fake thru map'
+                done()
+
           describe 'when used with mapType', ->
             it 'should provide the fake implementations to the isolated module', (done)->
               isolate.mapType
@@ -114,19 +154,32 @@ exports.ensure_all_behaviours = (isolate, moduleFactory)->
 
 
         describe 'order of precedence', ->
+          describe 'for standard mappings only', ->
+            mut = undefined
+            beforeEach (done)->
+              isolate.mapType 'object', name: 'the-fake-object'
+              isolate.map 'dependency', name: 'the-fake-dep'
+              isolate.map 'dependency', name: 'the-second-fake-dep'
+              moduleFactory 'basic', (m)->
+                mut = m
+                done()
 
-          mut = undefined
-          beforeEach (done)->
-            isolate.mapType 'object', name: 'the-fake-object'
-            isolate.map 'dependency', name: 'the-fake-dep'
-            isolate.map 'dependency', name: 'the-second-fake-dep'
-            moduleFactory 'basic', (m)->
-              mut = m
-              done()
+            it 'should select last matching rule defined', ->
+              (expect mut.dependency.name).to.equal 'the-second-fake-dep'
+          describe 'for parent specific mappings', ->
+            mut = undefined
+            beforeEach (done)->
+              isolate.mapType 'object', name: 'the-fake-object'
+              isolate.map 'dependency', name: 'the-fake-dep'
+              isolate.map 'dependency', 'basic', name: 'the-fake-dep-for-basic'
+              isolate.map 'dependency', 'basic', name: 'the-second-fake-dep-for-basic'
+              isolate.map 'dependency', name: 'the-second-fake-dep'
+              moduleFactory 'basic', (m)->
+                mut = m
+                done()
 
-          it 'should select last matching rule defined', ->
-            (expect mut.dependency.name).to.equal 'the-second-fake-dep'
-
+            it 'should prefer parent specific mappings, using the last defined', ->
+              (expect mut.dependency.name).to.equal 'the-second-fake-dep-for-basic'
 
 
 
