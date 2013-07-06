@@ -175,6 +175,13 @@ Isolate
   .map(/.*_view/, (options)-> {})
 ```
 or
+```coffeescript
+Isolate
+  .map('some/module', 'some/calling/module', {})
+  .map('/.*_controller$/', '/.*_view$/', (options)-> {})
+  .map(/.*_view/, /.*_module/, (options)-> {})
+```
+or
 
 ```coffeescript
 Isolate
@@ -188,7 +195,7 @@ for any given _matcher_ (See the _passthru_ section above for details
 on matchers).
 
 This option expects to be provided a matcher and either a standin
-instance to inject, or a _factory_ (see `map.asFactory` below). As
+instance to inject, or a _factory_ (see `map.asFactory` below). It is also possible to map a standin for a requesting module that is only applied from a specific calling module or matcher, in which case, a standing specified only for a specified calling module will supersede a generic standin in cases where it is valid to apply it. As
 syntactic sugar, you can also pass an object map of matcher: standin
 pairs too (second example above)
 
@@ -249,6 +256,18 @@ Isolate
       (options)-> {}
 ```
 or
+```coffeescript
+Isolate
+  .mapAsFactory 'some/module','some/calling/module',
+    (actual, module_path, requesting_module_path)-> {}
+  .mapAsFactory '/.*_controller$/','/calling/.*_view$/',
+    (actual, module_path, requesting_module_path)->
+      (options)-> {}
+  .mapAsFactory /.*_view/,/calling/.*_module/
+    (actual, module_path, requesting_module_path)->
+      (options)-> {}
+```
+or
 
 ```coffeescript
 Isolate
@@ -261,7 +280,7 @@ Isolate
 ```
 `mapAsFactory` allows you to provide a dynamically generated standin implementation
 to inject with the possibility to customize the standin to the requested
-module details. `mapAsFactory` follows the same _matcher_ rules described in the
+module details. It is also possible to specify a factory that only applies to the requested module when called from a specified module (or matcher), in which case, a standing specified only for a specified calling module will supersede a generic standin in cases where it is valid to apply it. `mapAsFactory` follows the same _matcher_ rules described in the
 _passthru_ section above.
 
 This option expects to be provided a matcher and a function which
