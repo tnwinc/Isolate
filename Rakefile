@@ -7,6 +7,7 @@ task :build do
   system("cd #{root} && bundle exec coffee --compile --output . src/isolate.coffee")
   system("cd #{root} && bundle exec coffee --compile --output ./node_modules src/isolate.coffee")
   system("cd #{root} && bundle exec coffee --compile spec")
+  system("cd #{root} && bundle exec coffee --compile --output ./node_modules/commonjs_specific spec/modules_for_testing/commonjs")
 end
 
 test_namespace = namespace :test do
@@ -14,7 +15,7 @@ test_namespace = namespace :test do
   task :commonjs => :build do
     debug = isDebug?() ? ' debug' : ''
     Dir.chdir root do
-      system "NODE_PATH=.:./spec:./spec/modules_for_testing/commonjs:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
+      system "./node_modules/.bin/mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
     end
   end
 
@@ -70,6 +71,8 @@ task :clean do
   Dir.chdir root do
     FileUtils.rm(FileList['*.js'])
     FileUtils.rm(FileList['spec/**/*.js'])
+    FileUtils.rm(FileList['node_modules/*.js'])
+    FileUtils.rm(FileList['node_modules/commonjs_specific/*.js'])
   end
 end
 
