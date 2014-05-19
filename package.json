@@ -9,12 +9,12 @@
     "test": "rake test versions=latest"
   },
   "dependencies": {
-    "coffee-script": "*"
   },
   "devDependencies": {
     "chai": "1.x.x",
     "requirejs": "2.1.x",
-    "mocha": "1.6.x"
+    "mocha": "1.6.x",
+    "coffee-script": "*"
   },
   "engine": "node >= 0.6.0"
 }
