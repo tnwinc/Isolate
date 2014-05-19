@@ -4,6 +4,7 @@
   "author": "The Network, Inc",
   "description": "Module isolation framework for CommonJs and AMD module dependencies to support Test Driven Development.",
   "homepage": "https://github.com/tnwinc/Isolate",
+	"repository": "https://github.com/tnwinc/Isolate.js",
   "main": "./isolate.js",
   "scripts": {
     "test": "rake test versions=latest"

@@ -4,8 +4,8 @@ task :default => [:build]
 
 desc 'Create js files from coffee sources'
 task :build do
-  `coffee --compile --output . src/isolate.coffee`
-  `coffee --compile spec`
+  `node_modules/.bin/coffee --compile --output . src/isolate.coffee`
+  `node_modules/.bin/coffee --compile spec`
 end
 
 test_namespace = namespace :test do
