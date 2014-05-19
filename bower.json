@@ -1,0 +1,28 @@
+{
+  "name": "Isolate",
+  "version": "0.11.0",
+  "homepage": "https://github.com/tnwinc/Isolate",
+  "authors": [
+    "James Maroney <jamesmaroney@tnwinc.com>"
+  ],
+  "description": "dependency injection for testing amd/commonjs modules",
+  "main": "isolate.js",
+  "moduleType": [
+    "amd",
+    "node"
+  ],
+  "keywords": [
+    "testing",
+    "modules",
+    "dependency",
+    "injection"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

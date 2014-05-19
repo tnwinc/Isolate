@@ -1,4 +1,4 @@
-global.expect = (require 'chai').expect
+global.expect = require('chai').expect
 
 path = require 'path'
 requirejs = require 'requirejs'

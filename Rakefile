@@ -4,8 +4,8 @@ task :default => [:build]
 
 desc 'Create js files from coffee sources'
 task :build do
-  system("cd #{root} && bundle exec coffee --compile --output . src/isolate.coffee")
-  system("cd #{root} && bundle exec coffee --compile spec")
+  `coffee --compile --output . src/isolate.coffee`
+  `coffee --compile spec`
 end
 
 test_namespace = namespace :test do
@@ -13,7 +13,7 @@ test_namespace = namespace :test do
   task :commonjs => :build do
     debug = isDebug?() ? ' debug' : ''
     Dir.chdir root do
-      system "NODE_PATH=.:./spec:./spec/modules_for_testing/commonjs:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --reporter spec #{debug} ./spec/commonjs.spec.coffee"
+      system "NODE_PATH=.:./spec:./spec/modules_for_testing/commonjs:$NODE_PATH ./node_modules/.bin/mocha --reporter spec #{debug} ./spec/commonjs.spec.js"
     end
   end
 
@@ -44,7 +44,7 @@ test_namespace = namespace :test do
       Dir.chdir root do
         puts "Running tests against requirejs version: [#{version}]"
         system "npm install requirejs@#{version}"
-        cmd = "NODE_PATH=.:./spec:$NODE_PATH ./node_modules/.bin/mocha --compilers coffee:coffee-script --globals 'define,requirejsVars' --reporter spec #{debug} ./spec/requirejs.spec.coffee"
+        cmd = "NODE_PATH=.:./spec:$NODE_PATH ./node_modules/.bin/mocha --globals 'define,requirejsVars' --reporter spec #{debug} ./spec/requirejs.spec.js"
         if isDebug?()
           system cmd
         else
