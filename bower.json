@@ -21,8 +21,14 @@
   "ignore": [
     "**/.*",
     "node_modules",
-    "bower_components",
-    "test",
-    "tests"
+    "spec",
+    "src",
+    "package.json",
+    "travis.yml",
+		"Guardfile",
+		"Rakefile",
+		"Gemfile",
+		"Gemfile.lock",
+		"examples"
   ]
 }
