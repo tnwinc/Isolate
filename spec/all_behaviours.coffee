@@ -101,16 +101,6 @@ exports.ensure_all_behaviours = (isolate, moduleFactory)->
                   (expect mut.dependency.name).to.equal 'factory fake'
                   done()
 
-          describe 'when accessing the isolation fakes in the factory', ->
-            it 'should find the configured fakes', (done)->
-              ctx = isolate.newContext('tmp').reset()
-              ctx.map 'dependency': isolate.mapAsFactory ->
-                @require ['dependency'], (dep)->
-                  (expect dep.name).to.equal 'fake-dependency'
-                  done()
-                name: 'fake-dependency'
-              moduleFactory ctx, 'basic', (mut)->
-
           describe 'when used with map', ->
             it 'should provide the fake implementations to the isolated module', (done)->
               isolate.map

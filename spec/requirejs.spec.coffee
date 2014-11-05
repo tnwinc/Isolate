@@ -52,6 +52,16 @@ runTests = (isolate)->
       it 'should properly find the wrapped dependency in the dependencies object', ->
         (expect @mut.dependencies['text!dependency'].name).to.equal 'text[real dep]'
 
+    describe 'when accessing the isolation fakes in the factory', ->
+      it 'should find the configured fakes', (done)->
+        ctx = isolate.newContext('tmp').reset()
+        ctx.map 'dependency': isolate.mapAsFactory ->
+          @require ['dependency'], (dep)->
+            (expect dep.name).to.equal 'fake-dependency'
+            done()
+          name: 'fake-dependency'
+        moduleFactory ctx, 'basic', (mut)->
+
 if requirejs.version.match /^2\.1\..*/
   isolate = requirejs 'isolate'
   isolate.useRequire(requirejs)
