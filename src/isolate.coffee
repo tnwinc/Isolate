@@ -73,7 +73,7 @@
     processDependency: (path, actual, parent_module_path)=>
       handler = @findMatchingHandler path, actual
       throw Error "Failed to generate fake for module [#{path}] of type [#{getType actual}] while isolating module [#{parent_module_path}]" unless handler?
-      return handler actual, path, parent_module_path
+      return handler.call this, actual, path, parent_module_path
 
     # Find the appropriate handler configured for a
     # particular module.
@@ -175,9 +175,10 @@
       # Generate a secondary require context, used to hold the
       # standins.
       isolatedContextName = "isolated_#{Math.floor Math.random() * 100000}"
-      isolatedRequire = IsolationContext._require.config
+      isolationCtx.require = isolatedRequire = IsolationContext._require.config
         context: isolatedContextName
         baseUrl: mainCtx.config.baseUrl
+
       isolatedRequireCtx = IsolationContext._require.s.contexts[isolatedContextName]
 
       modulesToLoad = [requested_module].concat isolationCtx.ensuredAsyncModules || []
