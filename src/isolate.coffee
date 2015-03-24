@@ -7,6 +7,10 @@
     root.Isolate = factory()
 ) this, ->
 
+  # used to keep contexts unique
+  isolatedContextNameNumber = 0
+  isolationContextNumber = 0
+
   #### Helpers to keep later code more readable
   # Get's the Object.prototype.toString "type" of an object.
   # It is often more informative than a simple typeof statement.
@@ -174,7 +178,7 @@
 
       # Generate a secondary require context, used to hold the
       # standins.
-      isolatedContextName = "isolated_#{Math.floor Math.random() * 100000}"
+      isolatedContextName = "isolated_#{isolatedContextNameNumber++}"
       isolationCtx.require = isolatedRequire = IsolationContext._require.config
         context: isolatedContextName
         baseUrl: mainCtx.config.baseUrl
@@ -300,7 +304,7 @@
       return this
 
     newContext: (name)->
-      name = name or "isolation_context_#{Math.floor Math.random() * 10000}"
+      name = name or "isolation_context_#{isolationContextNumber++}"
       ctx = new IsolationContext(name)
       ctx.rules = this.rules?.slice 0
       ctx.typeHandlers[type] = handler for type, handler of this.typeHandlers
