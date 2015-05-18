@@ -16,3 +16,13 @@ describe "Using node's require", ->
         fun = arguments[2]
       mod = isolationContext.require module_name
       fun mod
+
+  describe 'requiring modules with a deep path', ->
+
+    beforeEach ->
+      ctx = isolate.newContext('complex-requirement')
+               .passthru 'complex'
+      @mut = ctx.require 'module-with-complex-requirement'
+
+    it 'should passthru the module', ->
+      (expect @mut.requirement?.name).to.equal 'real complex-module'
