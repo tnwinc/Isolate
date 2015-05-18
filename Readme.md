@@ -120,8 +120,7 @@ add something like the following to your `test/mocha.opts` file:
 The `test/configure-isolate.coffee` file will be similar to:
 
 ```coffeescript
-Isolate = require 'Isolate'
-global.isolate = Isolate.isolate
+global.Isolate = require 'Isolate'
 
 Isolate
   .mapType #...
