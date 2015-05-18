@@ -18,7 +18,7 @@
 
   # Converts a RegExp or string into a matcher, given
   # specific rules around handling of strings.
-  getMatcherForPath = (path)->
+  getMatcherForPath = (path, greedy)->
     path_type = getType path
     if path_type == '[object RegExp]'
       return path
@@ -26,7 +26,8 @@
       if path[0] + path.slice(-1) == '//'
         return new RegExp path[1...-2]
       else
-        return new RegExp "(^|[^a-zA-Z0-9_])#{path}([.][a-zA-Z]{1,3})?$"
+        suffix = if greedy then "[/.].*" else "[.][a-zA-Z]{1,3}"
+        return new RegExp "(^|[^a-zA-Z0-9_])#{path}(#{suffix})?$"
     throw Error "Expected either a String or RegExp, but got #{getType path}"
 
   # Extend a dependencies array with a find function
@@ -246,7 +247,7 @@
       paths= paths[0] if '[object Array]' == getType paths[0]
       for path in paths
         @rules.unshift
-          matcher: getMatcherForPath path
+          matcher: getMatcherForPath path, true
           handler: passthru
       return this
 
