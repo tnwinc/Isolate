@@ -27,7 +27,7 @@ module only breaks its related tests. This allows you to develop with
 more confidence and track down issues faster.
 
 ### Tools that go well with Isolate
-* [mocha](http://visionmedia.github.com/mocha/) as a testing framework
+* [mocha](https://mochajs.org/) as a testing framework
 * [chai](http://chaijs.com/) as an expectations framework
 
 ### Examples
@@ -109,7 +109,7 @@ projects, you may be able to configure Isolate "just in time", right in
 your spec file - though it is much more maintainable to instead
 configure it during the bootstrap phase of running your specs.
 
-For instance, if you are using [mocha](http://visionmedia.github.com/mocha/),
+For instance, if you are using [mocha](https://mochajs.org/),
 you could put your isolate configuration in `test/configure-isolate.js` and
 add something like the following to your `test/mocha.opts` file:
 
